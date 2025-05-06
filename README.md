@@ -41,19 +41,5 @@ El nodo maestro coordina la ejecución, recibe reportes de los esclavos y puede 
 
 ---
 
-## 🖼️ Arquitectura del Sistema
-
-      +----------------+
-      |   Nodo Maestro |
-      +----------------+
-           ↑   ↑   ↑   ↑
- (reportes)|   |   |   |(resultados)
-           ↓   ↓   ↓   ↓
-
-
-
----
-
-## 📂 Estructura del Repositorio
 
 
