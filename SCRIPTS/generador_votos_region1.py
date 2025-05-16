@@ -323,7 +323,7 @@ def main():
     datos_votacion = simulador.simular_votacion()
     
     # Guardar resultados
-    archivo_salida = "votos_peru_simulados.csv"
+    archivo_salida = "votos_simulados_region1.csv"
     print(f"Escribiendo {len(datos_votacion)} registros al archivo {archivo_salida}...")
     simulador.guardar_resultados(datos_votacion, archivo_salida)
     
