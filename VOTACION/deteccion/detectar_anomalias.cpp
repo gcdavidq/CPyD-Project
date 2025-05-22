@@ -24,6 +24,7 @@ ResultadoDeteccion detectarAnomaliasCPU(const vector<Voto>& votos)
 
         #pragma omp for schedule(static) nowait
         for (size_t i = 0; i < votos.size(); ++i) {
+            //Para esta simulacion, consideramos que un voto es anomalo si el hash de su DNI es divisible por MOD_HASH
             bool es_anomalo = (hash<string>{}(votos[i].dni) % MOD_HASH) == 0;
             if (es_anomalo)   local_anomalos.push_back(votos[i]);
             else              local_validos.push_back(votos[i]);

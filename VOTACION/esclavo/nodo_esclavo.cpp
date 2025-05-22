@@ -1,4 +1,9 @@
-//Script que incluye las funciones que ejecutarán los nodos esclavos
+/*
+Script que incluye todas las librerías necesarias para la simulación de un nodo esclavo en un sistema de votación.
+
+POR AHORA, solo contiene la simulación de la llegada de votos y la detección de anomalías.
+El nodo esclavo recibe un CSV con los votos y un ID de nodo, simula la llegada de los votos en lotes y detecta anomalías en ellos.
+*/
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -23,18 +28,18 @@ using deteccion::ResultadoDeteccion; //Usamos el namespace deteccion para accede
 
 int main(int argc, char* argv[])
 {
-    if (argc < 3) {
+    if (argc < 3) { //en caso de que no se pasen los argumentos necesarios
         cerr << "Uso: nodo_esclavo <csv> <nodo_id>\n";
         return 1;
     }
-    string ruta_csv = argv[1];
-    int nodo_id          = std::stoi(argv[2]);
+    string ruta_csv = argv[1]; //argv [1] es el CSV
+    int nodo_id = std::stoi(argv[2]);
 
     // 1. Cargar votos
     auto todos = leerVotos(ruta_csv);
 
     // 2. Cola thread-safe para comunicar productor → consumidor
-    queue<std::vector<Voto>> cola;
+    queue<vector<Voto>> cola;
     mutex m;
     bool done = false;
 
@@ -58,7 +63,7 @@ int main(int argc, char* argv[])
                     this_thread::sleep_for(chrono::milliseconds(30));
                     continue;
                 }
-                lote = std::move(cola.front()); cola.pop();
+                lote = move(cola.front()); cola.pop();
             }
             ResultadoDeteccion R = deteccion::detectarAnomaliasCPU(lote); // CPU o CUDA
             cout << "[Nodo "<< nodo_id << "] "
@@ -66,7 +71,7 @@ int main(int argc, char* argv[])
                  << " anom="    << R.anomalos.size()
                  << " t="       << R.tiempo_proceso_ms << " ms\n";
 
-            // 🔜  aquí enviarás R al maestro con MPI_Send
+            //   aquí se enviará R al maestro con MPI_Send
         }
     });
 

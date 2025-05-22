@@ -1,3 +1,6 @@
+/*
+
+*/
 #include "/home/gianqm/Documentos/CPyD-Project/CPyD-Project/VOTACION/simulacion/simulacion_llegada.hpp"
 #include <fstream>
 #include <sstream>
@@ -42,13 +45,13 @@ void simularLlegadaVotos(const vector<Voto>& votos,
     uniform_int_distribution<> dist(100, 500);
 
     for (size_t i = 0; i < votos.size(); i += tam_lote) {
-        size_t fin = std::min(i + tam_lote, votos.size());
+        size_t fin = min(i + tam_lote, votos.size());
         vector<Voto> lote(votos.begin() + i, votos.begin() + fin);
 
         cout << "Nodo " << nodo_id << ": llegaron "
                   << lote.size() << " votos\n";
 
-        cb(std::move(lote));                               // <<<<<<
+        cb(move(lote));                               // <<<<<<
 
         this_thread::sleep_for(chrono::milliseconds(dist(gen)));
     }
