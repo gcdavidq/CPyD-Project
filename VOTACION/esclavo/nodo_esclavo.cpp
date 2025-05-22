@@ -14,18 +14,10 @@
 #include <iomanip>
 #include <ctime>
 #include <random>
-
+#include <VOTACION/common/estructura_votos.hpp>
 using namespace std;
 
-//Estrcutura para almacenar la información de cada voto
-struct Voto{
-    string timestamp;
-    string region;
-    string dni;
-    string candidato;
-    bool anomalo;
-    bool anomalia_detectada = false; //Para marcar las anomalias detectadas por el algoritmo
-};
+
 
 //Función para leer votos desde un archivo CSV
 vector<Voto> leerVotos(const string& archivo){
