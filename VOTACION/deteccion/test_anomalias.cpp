@@ -1,4 +1,4 @@
-// test_anomalias.cpp
+// test_anomalias.cpp - NO VALIDO
 #include "/home/gianqm/Documentos/CPyD-Project/CPyD-Project/VOTACION/deteccion/detectar_anomalias.hpp"
 #include <iostream>
 
