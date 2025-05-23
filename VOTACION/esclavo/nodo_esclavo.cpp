@@ -19,6 +19,7 @@ El nodo esclavo recibe un CSV con los votos y un ID de nodo, simula la llegada d
 #include <iomanip>
 #include <ctime>
 #include <random>
+#include <mpi.h>
 #include "/home/gianqm/Documentos/CPyD-Project/CPyD-Project/VOTACION/simulacion/simulacion_llegada.hpp"
 #include "/home/gianqm/Documentos/CPyD-Project/CPyD-Project/VOTACION/deteccion/detectar_anomalias.hpp"
 
