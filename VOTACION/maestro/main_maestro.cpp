@@ -77,7 +77,8 @@ void ejecutarNodoMaestro(int num_nodos){
     for (int i =1; i<num_nodos; i++){
         MPI_Status estado; //MPI_Status es una estructura que contiene información sobre el estado de la comunicación
 
-        vector<char> buffer(sizeof(CapacidadNodo)); //Creamos un buffer para recibir la información
+        vector<char> buffer(sizeof(CapacidadNodo)); //Creamos un buffer para recibir la información de los nodos
+        
 
 
     }
