@@ -75,14 +75,48 @@ void ejecutarNodoMaestro(int num_nodos){
 
     //Recibir informaicon sobre capacidades de los nodos
     for (int i =1; i<num_nodos; i++){
-        MPI_Status estado; //MPI_Status es una estructura que contiene información sobre el estado de la comunicación
 
+        MPI_Status estado; //MPI_Status es una estructura que contiene información sobre el estado de la comunicación
         vector<char> buffer(sizeof(CapacidadNodo)); //Creamos un buffer para recibir la información de los nodos
         
+        MPI_Recv(
+            buffer.data(), //Datos a recibir
+            buffer.size(), //Tamaño del buffer
+            MPI_CHAR, //Tipo de dato
+            i, //ID del nodo que envía
+            TAG_CAPACIDAD_NODO, //Etiqueta del mensaje
+            MPI_COMM_WORLD, //Comunicador
+            &estado //Estado de la comunicación, se coloca &estado para que se modifique el estado de la comunicación
+        ); 
 
+        //Desearilizar capacidad
+        memcpy(&capacidades_nodos[i], 
+            buffer.data(), 
+            sizeof(CapacidadNodo)
+        ); //Copiamos los datos del buffer a la estructura de capacidad
+
+        //Actualizar información de GPU en el seguimiento de rendimiento
+        rendimiento_nodos[i].tiene_gpu= capacidades_nodos[i].tiene_gpu; //Asignamos la GPU del nodo a la estructura de rendimiento
+        cout <<"Nodo"<<i<<"reporta: "<<capacidades_nodos[i].num_hilos<< "hilos, GPU:"
+            <<(capacidades_nodos[i].tiene_gpu ? capacidades_nodos[i].gpu_modelo : "NO")<<endl;
 
     }
-    //Coment
+    //Estadísticas globales
+    Estadisticas estadisticas_globales; //Creamos una estructura para las estadísticas globales
+    
+    //Tiempo de inicio de la simulación
+    auto tiempo_inicio = chrono::system_clock::now();
+    auto ultimo_reporte = tiempo_inicio; //Inicializamos el último reporte
+    auto ultimo_balanceo = tiempo_inicio; //Inicializamos el último balanceo
+
+    //Cola de trabajo pendiente y distribución inicial
+    int lotes_completados = 0; //Contador de lotes completados
+    int total_lotes = 0; 
+    bool procesamiento_finalizado = false; //Variable para saber si el procesamiento ha finalizado
+
+    //Bucle principal de recepcion de mensajes
+   
+
 
 
 
