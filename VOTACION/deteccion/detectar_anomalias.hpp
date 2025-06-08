@@ -18,7 +18,7 @@ La función detectarAnomaliasCUDA toma como entrada un vector de booleanos que r
 namespace deteccion {
 
 /** Heurística base empleada (puedes cambiarla por enum o string) */
-inline constexpr int MOD_HASH = 17;
+inline constexpr int MOD_HASH = 3;
 
 /**
  * @brief Resultado compacto de la detección CPU/GPU.

@@ -1,9 +1,10 @@
 /*
-Script para definir las constantes y configuraciones del sistema de votación.
+SCRIPT PARA LAS CONSTANTES Y CONFIGURACIÓN DEL PROYECTO
 */
 
 #include <iostream>
 #include <string>
+#include "VOTACION/common/estructura_votos.hpp"
 
 
 // Constantes y configuración
@@ -28,3 +29,5 @@ enum Tags {
     TAG_BALANCE_CARGA = 10,
     TAG_RENDIMIENTO_NODO = 11
 };
+
+CapacidadNodo detectarCapacidadNodo();

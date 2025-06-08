@@ -46,13 +46,16 @@ void simularLlegadaVotos(const vector<Voto>& votos,
     uniform_int_distribution<> dist(100, 500);
 
     for (size_t i = 0; i < votos.size(); i += tam_lote) {
+        //Determinar cuantos votos procesar en este lote
         size_t fin = min(i + tam_lote, votos.size());
+
+        //Crear un lote con los votos del rango [i, fin)
         vector<Voto> lote(votos.begin() + i, votos.begin() + fin);
 
         cout << "Nodo " << nodo_id << ": llegaron "
                   << lote.size() << " votos\n";
 
-        cb(move(lote));                               // <<<<<<
+        cb(move(lote)); // Invocar el callback con el lote
 
         this_thread::sleep_for(chrono::milliseconds(dist(gen)));
     }

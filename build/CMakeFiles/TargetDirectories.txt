@@ -1,0 +1,3 @@
+/home/gianqm/Documentos/CPyD-Project/CPyD-Project/build/CMakeFiles/nodo_esclavo.dir
+/home/gianqm/Documentos/CPyD-Project/CPyD-Project/build/CMakeFiles/edit_cache.dir
+/home/gianqm/Documentos/CPyD-Project/CPyD-Project/build/CMakeFiles/rebuild_cache.dir

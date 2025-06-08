@@ -1,0 +1,32 @@
+#include "VOTACION/common/config.hpp"
+#include <omp.h>
+
+#ifdef USE_CUDA
+#include <cuda_runtime.h>
+#endif
+
+CapacidadNodo detectarCapacidadNodo() {
+    CapacidadNodo capacidad;
+    capacidad.num_hilos = omp_get_max_threads();
+    capacidad.tiene_gpu = false;
+    capacidad.rendimiento_relativo = 1.0;
+    capacidad.gpu_memoria_mb = 0;
+    capacidad.gpu_modelo = "ninguno";
+    capacidad.velocidad_procesamiento = 0.0;
+    capacidad.lotes_pendientes = 0;
+
+#ifdef USE_CUDA
+    int deviceCount = 0;
+    cudaError_t error = cudaGetDeviceCount(&deviceCount);
+    if (error == cudaSuccess && deviceCount > 0) {
+        capacidad.tiene_gpu = true;
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, 0);
+        capacidad.gpu_memoria_mb = deviceProp.totalGlobalMem / (1024 * 1024);
+        capacidad.gpu_modelo = deviceProp.name;
+        capacidad.rendimiento_relativo = 2.0 + (deviceProp.multiProcessorCount / 20.0);
+    }
+#endif
+
+    return capacidad;
+}
