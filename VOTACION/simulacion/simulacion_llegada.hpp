@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include "/home/gianqm/Documentos/CPyD-Project/CPyD-Project/VOTACION/common/estructura_votos.hpp"
+#include "VOTACION/common/estructura_votos.hpp"
 
 // Lee un CSV entero y devuelve todos los votos.
 std::vector<Voto> leerVotos(const std::string& ruta_csv);

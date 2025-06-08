@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/nodo_esclavo.dir/VOTACION/esclavo/nodo_esclavo.cpp.o CMakeFiles/nodo_esclavo.dir/VOTACION/simulacion/simulacion_llegada.cpp.o CMakeFiles/nodo_esclavo.dir/VOTACION/deteccion/detectar_anomalias.cpp.o -o nodo_esclavo 

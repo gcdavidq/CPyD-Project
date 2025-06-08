@@ -1,4 +1,6 @@
-//SCRIPT QUE INCLUYE TODAS LAS ESTRUCTURAS DE DATOS NECESARIAS PARA EL PROYECTO
+/* 
+SCRIPT QUE INCLUYE TODAS LAS ESTRUCTURAS DE DATOS NECESARIAS PARA EL PROYECTO
+*/
 #pragma once
 #include <string>
 #include <vector>
@@ -33,7 +35,7 @@ struct Estadisticas {
     std::map<std::string,int> votos_por_region;
     std::map<std::string,int> votos_por_candidato;
 
-    // ffuncion  para combinar estadísticas
+    // funcion miembro para combinar estadísticas
     void combinar(const Estadisticas& otra) {
         total_votos          += otra.total_votos;
         anomalias_reales     += otra.anomalias_reales;
@@ -69,3 +71,4 @@ struct RendimientoNodo {
     float carga_actual{0.0f};          // %
     std::chrono::time_point<std::chrono::system_clock> ultimo_reporte;
 };
+
