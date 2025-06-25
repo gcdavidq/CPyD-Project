@@ -15,6 +15,7 @@ struct Voto {
     std::string candidato;
     bool  anomalo{false};
     bool  anomalia_detectada{false};
+    int tipo_anomalia; //NUEVO
 };
 
 // Estructura para almacenar un lote de trabajo
@@ -35,6 +36,12 @@ struct Estadisticas {
     std::map<std::string,int> votos_por_region;
     std::map<std::string,int> votos_por_candidato;
 
+    //nuevas
+    std::map<std::string, std::map<std::string, int>> votos_por_candidato_por_region;
+    std::map<std::string, std::map<std::string, int>> anomalias_detectadas_por_region;
+    std::map<std::string, std::map<std::string, int>> anomalias_detectadas_por_candidato;
+
+
     // funcion miembro para combinar estadísticas
     void combinar(const Estadisticas& otra) {
         total_votos          += otra.total_votos;
@@ -45,8 +52,31 @@ struct Estadisticas {
 
         for (const auto& p : otra.votos_por_region)
             votos_por_region[p.first] += p.second;
+
         for (const auto& p : otra.votos_por_candidato)
             votos_por_candidato[p.first] += p.second;
+
+        // Nuevos mapas anidados
+        for (const auto& region_par : otra.votos_por_candidato_por_region) {
+            const std::string& region = region_par.first;
+            for (const auto& cand_par : region_par.second) {
+                votos_por_candidato_por_region[region][cand_par.first] += cand_par.second;
+            }
+        }
+
+        for (const auto& region_par : otra.anomalias_detectadas_por_region) {
+            const std::string& region = region_par.first;
+            for (const auto& cand_par : region_par.second) {
+                anomalias_detectadas_por_region[region][cand_par.first] += cand_par.second;
+            }
+        }
+
+        for (const auto& candidato_par : otra.anomalias_detectadas_por_candidato) {
+            const std::string& candidato = candidato_par.first;
+            for (const auto& region_par : candidato_par.second) {
+                anomalias_detectadas_por_candidato[candidato][region_par.first] += region_par.second;
+            }
+        }
     }
 };
 
@@ -56,9 +86,10 @@ struct CapacidadNodo {
     bool  tiene_gpu{false};
     float rendimiento_relativo{1.0f};
     int   gpu_memoria_mb{0};
-    std::string gpu_modelo;
+    char gpu_modelo[128];
     float velocidad_procesamiento{0.0f};  // lotes/s
     int   lotes_pendientes{0};
+
 };
 
 // Estructura para almacenar el rendimiento de un nodo
@@ -70,5 +101,7 @@ struct RendimientoNodo {
     bool  tiene_gpu{false};
     float carga_actual{0.0f};          // %
     std::chrono::time_point<std::chrono::system_clock> ultimo_reporte;
+    double tiempo_comunicacion_mpi{0};
+    int num_hilos {0};
+    //double tiempo_sincronizacion_mpi{0};
 };
-

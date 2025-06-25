@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VotaPe - Elecciones Electrónicas</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o9N1j8R+v48W2bXnH4if8Tgoy3hpGg8K6k+51Vdgtjk="
+    crossorigin=""
+  />
+  <!-- Tu CSS -->
+  <link rel="stylesheet" href="../static/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="logo">VotaPe</a>
+    <button
+      class="menu-toggle"
+      aria-controls="main-menu"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      ☰
+    </button>
+    <nav class="main-menu" id="main-menu">
+      <ul>
+
+        <li><a href="/login">Ingresar</a></li>
+
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>
+          ¡Bienvenido a <span class="resaltado">VotaPe</span>!
+        </h1>
+        <p>
+          <span class="subtitulo">Tu plataforma de <b>elecciones electrónicas</b> seguras, rápidas y transparentes.</span><br>
+          <span class="resaltado">Participa, consulta y vive la democracia digital.</span>
+        </p>
+        <ul>
+          <li><span>🗳️</span> <b>Vota</b> fácil y seguro</li>
+          <li><span>📊</span> <b>Resultados</b> en tiempo real</li>
+          <li><span>🗺️</span> <b>Mapa</b> interactivo de departamentos</li>
+        </ul>
+        <a href="/login" class="btn btn-bienvenida">
+          ¡Comienza ahora!
+        </a>
+      </div>
+      <div class="hero-image">
+        <img src="../static/img/foto.png" alt="Voto Electrónico" />
+        <div class="image-glow"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Animaciones CSS -->
+<style>
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-40px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.7);}
+  60% { transform: scale(1.15);}
+  80% { transform: scale(0.95);}
+  100% { transform: scale(1);}
+}
+@keyframes pulseGlow {
+  0% { opacity: 0.7; transform: translate(-50%,-50%) scale(1);}
+  50% { opacity: 0.2; transform: translate(-50%,-50%) scale(1.18);}
+  100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1);}
+}
+</style>
+
+<!-- Leaflet JS -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-pv4PSCPYMj2rLNKJ0Ggp6qP0SySSxMxu0sKw6LqJwBs="
+  crossorigin=""
+></script>
+<!-- Tu JS -->
+<script src="script.js"></script>
+</body>
+</html>

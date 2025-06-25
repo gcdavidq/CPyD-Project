@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa Interactivo de Perú - Selección por Departamento</title>
+
+  <!-- Leaflet CSS externo -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <!-- Tu CSS -->
+  <link rel="stylesheet" href="../static/css/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <nav class="main-menu" id="main-menu">
+      <ul>
+        <li>
+          <a href="/">Cerrar Sesión</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="contenido-flex">
+  <div class="map-container">
+    <div class="map-title">
+      Seleccione un departamento haciendo clic en un punto
+    </div>
+    <div id="map"></div>
+  </div>
+  <div class="graph-container">
+    <div id="selected-department">
+      Ningún departamento seleccionado
+    </div>
+    <div class="stats-flexbox">
+      <div id="stats-main" class="stats-main"></div>
+      <div id="stats-ganador" class="stats-ganador"></div>
+    </div>
+
+    <div id="graph">
+      <canvas id="barChart"></canvas>
+          <div class="selector-flexbox">
+      <div class="candidato-selector-box" id="candidato-selector-box">
+        <label for="candidato-selector"><b>Selecciona un candidato:</b></label>
+        <select id="candidato-selector">
+          <option value="">-- Elegir candidato --</option>
+        </select>
+      </div>
+      <div id="region-mas-votos" class="region-mas-votos"></div>
+    </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- Librerías externas -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Tu JS -->
+<script src="../static/js/contenido.js"></script>
+</body>
+</html>

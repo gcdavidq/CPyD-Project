@@ -3,6 +3,9 @@
 #include <vector>
 #include <functional>
 #include "VOTACION/common/estructura_votos.hpp"
+#include "VOTACION/common/config.hpp"
+#include <mutex>
+
 
 // Lee un CSV entero y devuelve todos los votos.
 std::vector<Voto> leerVotos(const std::string& ruta_csv);
@@ -18,4 +21,9 @@ std::vector<Voto> leerVotos(const std::string& ruta_csv);
 void simularLlegadaVotos(const std::vector<Voto>& todos_votos,
                          int nodo_id,
                          std::function<void(std::vector<Voto>&&)> callback,
-                         size_t tam_lote = 150);
+                         size_t TAM_LOTE_POR_DEFECTO, std::mutex& mtx_votos);
+
+// Versión simplificada que recibe ruta y vector de votos
+void simularLlegadaVotos(const std::string& ruta_csv,
+                         int nodo_id,
+                         std::vector<Voto>& votos_recibidos,std::mutex& mtx_votos);

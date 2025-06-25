@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Votación Electrónica Perú - Tiempo Real</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #ff6b6b;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            height: 25px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .region-item, .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            border-left: 4px solid #ff6b6b;
+            transition: all 0.3s ease;
+        }
+
+        .region-item:hover, .candidate-item:hover {
+            background: linear-gradient(90deg, #e9ecef, #dee2e6);
+            transform: translateX(5px);
+        }
+
+        .anomaly-alert {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 107, 107, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.8); }
+        }
+
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗳️ Dashboard Votación Electrónica Perú</h1>
+        <div class="subtitle">
+            <span>Monitoreo en Tiempo Real</span>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span>EN VIVO</span>
+            </div>
+            <span id="lastUpdate">Última actualización: --:--:--</span>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Estadísticas Principales -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">📊</div>
+                Estadísticas Principales
+            </h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalVotos">0</div>
+                    <div class="stat-label">Total Votos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="nodosActivos">0</div>
+                    <div class="stat-label">Nodos Activos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="anomaliasDetectadas">0</div>
+                    <div class="stat-label">Anomalías Detectadas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="tiempoProcesamiento">0s</div>
+                    <div class="stat-label">Tiempo Procesamiento</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detección de Anomalías -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">⚠️</div>
+                Detección de Anomalías
+            </h3>
+            <div id="anomalyAlert" class="anomaly-alert" style="display: none;">
+                <strong>¡Anomalías Detectadas!</strong>
+                <p>Se han encontrado irregularidades en el proceso de votación.</p>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value" id="precision">0%</div>
+                    <div class="metric-label">Precisión</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="recall">0%</div>
+                    <div class="metric-label">Recall</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="falsosPositivos">0</div>
+                    <div class="metric-label">Falsos Positivos</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="falsosNegativos">0</div>
+                    <div class="metric-label">Falsos Negativos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Votos por Región -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">🗺️</div>
+                Votos por Región
+            </h3>
+            <div id="regionesContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Cargando datos de regiones...
+                </div>
+            </div>
+        </div>
+
+        <!-- Votos por Candidato -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">👤</div>
+                Votos por Candidato
+            </h3>
+            <div id="candidatosContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Cargando datos de candidatos...
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Votos por Región -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">📈</div>
+                Distribución Regional
+            </h3>
+            <div class="chart-container">
+                <canvas id="regionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico de Candidatos -->
+        <div class="card">
+            <h3>
+                <div class="card-icon">🏆</div>
+                Resultados por Candidato
+            </h3>
+            <div class="chart-container">
+                <canvas id="candidateChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Socket.IO
+        const socket = io();
+        
+        // Variables para gráficos
+        let regionChart = null;
+        let candidateChart = null;
+
+        // Conectar con el servidor
+        socket.on('connect', function() {
+            console.log('Conectado al servidor');
+        });
+
+        // Recibir actualizaciones de estadísticas
+        socket.on('estadisticas_update', function(data) {
+            updateDashboard(data);
+        });
+
+        function updateDashboard(data) {
+            // Actualizar estadísticas principales
+            document.getElementById('totalVotos').textContent = data.total_votos.toLocaleString();
+            document.getElementById('nodosActivos').textContent = data.nodos_activos;
+            document.getElementById('anomaliasDetectadas').textContent = data.anomalias_detectadas;
+            document.getElementById('tiempoProcesamiento').textContent = data.tiempo_procesamiento.toFixed(1) + 's';
+            document.getElementById('lastUpdate').textContent = `Última actualización: ${data.ultimo_update}`;
+
+            // Actualizar métricas de anomalías
+            if (data.anomalias_reales > 0) {
+                const precision = ((data.anomalias_detectadas - data.falsos_positivos) / data.anomalias_detectadas * 100).toFixed(1);
+                const recall = ((data.anomalias_reales - data.falsos_negativos) / data.anomalias_reales * 100).toFixed(1);
+                
+                document.getElementById('precision').textContent = precision + '%';
+                document.getElementById('recall').textContent = recall + '%';
+            }
+
+            document.getElementById('falsosPositivos').textContent = data.falsos_positivos;
+            document.getElementById('falsosNegativos').textContent = data.falsos_negativos;
+
+            // Mostrar alerta de anomalías
+            const anomalyAlert = document.getElementById('anomalyAlert');
+            if (data.anomalias_detectadas > 0) {
+                anomalyAlert.style.display = 'block';
+            } else {
+                anomalyAlert.style.display = 'none';
+            }
+
+            // Actualizar regiones
+            updateRegiones(data.votos_por_region);
+            
+            // Actualizar candidatos
+            updateCandidatos(data.votos_por_candidato);
+            
+            // Actualizar gráficos
+            updateCharts(data.votos_por_region, data.votos_por_candidato);
+        }
+
+        function updateRegiones(votos_por_region) {
+            const container = document.getElementById('regionesContainer');
+            const totalVotos = Object.values(votos_por_region).reduce((a, b) => a + b, 0);
+            
+            if (totalVotos === 0) return;
+
+            const sortedRegiones = Object.entries(votos_por_region)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10); // Top 10 regiones
+
+            container.innerHTML = sortedRegiones.map(([region, votos]) => {
+                const porcentaje = ((votos / totalVotos) * 100).toFixed(1);
+                return `
+                    <div class="region-item">
+                        <span><strong>${region}</strong></span>
+                        <span>${votos.toLocaleString()} votos (${porcentaje}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${porcentaje}%">${porcentaje}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCandidatos(votos_por_candidato) {
+            const container = document.getElementById('candidatosContainer');
+            const totalVotos = Object.values(votos_por_candidato).reduce((a, b) => a + b, 0);
+            
+            if (totalVotos === 0) return;
+
+            const sortedCandidatos = Object.entries(votos_por_candidato)
+                .sort((a, b) => b[1] - a[1]);
+
+            container.innerHTML = sortedCandidatos.map(([candidato, votos]) => {
+                const porcentaje = ((votos / totalVotos) * 100).toFixed(1);
+                return `
+                    <div class="candidate-item">
+                        <span><strong>${candidato}</strong></span>
+                        <span>${votos.toLocaleString()} votos (${porcentaje}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${porcentaje}%">${porcentaje}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCharts(votos_por_region, votos_por_candidato) {
+            // Gráfico de regiones
+            const regionCtx = document.getElementById('regionChart').getContext('2d');
+            const regionLabels = Object.keys(votos_por_region).slice(0, 8);
+            const regionData = Object.values(votos_por_region).slice(0, 8);
+
+            if (regionChart) {
+                regionChart.destroy();
+            }
+
+            regionChart = new Chart(regionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: regionLabels,
+                    datasets: [{
+                        data: regionData,
+                        backgroundColor: [
+                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+                            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de candidatos
+            const candidateCtx = document.getElementById('candidateChart').getContext('2d');
+            const candidateLabels = Object.keys(votos_por_candidato);
+            const candidateData = Object.values(votos_por_candidato);
+
+            if (candidateChart) {
+                candidateChart.destroy();
+            }
+
+            candidateChart = new Chart(candidateCtx, {
+                type: 'bar',
+                data: {
+                    labels: candidateLabels,
+                    datasets: [{
+                        label: 'Votos',
+                        data: candidateData,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Inicializar al cargar la página
+        window.addEventListener('load', function() {
+            fetch('/api/estadisticas')
+                .then(response => response.json())
+                .then(data => updateDashboard(data))
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

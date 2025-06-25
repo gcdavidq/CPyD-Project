@@ -13,7 +13,7 @@ Se realizar una llamada a la función de ejecución del nodo maestro o esclavo s
 
 int main(int argc, char** argv) {
     // Inicializar entorno MPI con soporte para hilos múltiples
-    int provided;
+    int provided; //indicamos el nivel de soporte de hilos
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided < MPI_THREAD_MULTIPLE) {
@@ -24,13 +24,16 @@ int main(int argc, char** argv) {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    
 
     // Configurar OpenMP
     int num_hilos = NUM_HILOS_POR_DEFECTO;
     if (argc > 1) {
-        num_hilos = std::atoi(argv[1]);
+        num_hilos = std::atoi(argv[1]); //Leemos el numero de hilos desde el argumento pasado en la linea de comandos
     }
+    //Establecemos el numero de hilos para OpenMP
     omp_set_num_threads(num_hilos);
+    
 
     // Ejecutar función correspondiente según el tipo de nodo
     if (rank == MAESTRO) {

@@ -88,6 +88,32 @@ void serializarEstadisticas(const Estadisticas& stats, std::vector<char>& buffer
     for (const auto& par : stats.votos_por_candidato) {
         tamano_total += par.first.size() + 1 + sizeof(int);
     }
+    // votos_por_candidato_por_region
+    tamano_total += sizeof(int); // número de regiones
+    for (const auto& region_par : stats.votos_por_candidato_por_region) {
+        tamano_total += region_par.first.size() + 1 + sizeof(int); // nombre región + número de candidatos
+        for (const auto& cand_par : region_par.second) {
+            tamano_total += cand_par.first.size() + 1 + sizeof(int); // nombre candidato + conteo
+        }
+    }
+
+    // anomalias_detectadas_por_region
+    tamano_total += sizeof(int);
+    for (const auto& region_par : stats.anomalias_detectadas_por_region) {
+        tamano_total += region_par.first.size() + 1 + sizeof(int);
+        for (const auto& cand_par : region_par.second) {
+            tamano_total += cand_par.first.size() + 1 + sizeof(int);
+        }
+    }
+
+    // anomalias_detectadas_por_candidato
+    tamano_total += sizeof(int);
+    for (const auto& cand_par : stats.anomalias_detectadas_por_candidato) {
+        tamano_total += cand_par.first.size() + 1 + sizeof(int);
+        for (const auto& region_par : cand_par.second) {
+            tamano_total += region_par.first.size() + 1 + sizeof(int);
+        }
+    }
 
     buffer.resize(tamano_total);
     char* ptr = buffer.data();
@@ -118,6 +144,54 @@ void serializarEstadisticas(const Estadisticas& stats, std::vector<char>& buffer
         ptr += par.first.size() + 1;
         memcpy(ptr, &par.second, sizeof(int)); ptr += sizeof(int);
     }
+    // SERIALIZAR votos_por_candidato_por_region
+    int total_regiones = stats.votos_por_candidato_por_region.size();
+    memcpy(ptr, &total_regiones, sizeof(int)); ptr += sizeof(int);
+    for (const auto& region_par : stats.votos_por_candidato_por_region) {
+        memcpy(ptr, region_par.first.c_str(), region_par.first.size() + 1);
+        ptr += region_par.first.size() + 1;
+
+        int total_candidatos = region_par.second.size();
+        memcpy(ptr, &total_candidatos, sizeof(int)); ptr += sizeof(int);
+        for (const auto& cand_par : region_par.second) {
+            memcpy(ptr, cand_par.first.c_str(), cand_par.first.size() + 1);
+            ptr += cand_par.first.size() + 1;
+            memcpy(ptr, &cand_par.second, sizeof(int)); ptr += sizeof(int);
+        }
+    }
+
+    // SERIALIZAR anomalias_detectadas_por_region
+    int total_regiones_anom = stats.anomalias_detectadas_por_region.size();
+    memcpy(ptr, &total_regiones_anom, sizeof(int)); ptr += sizeof(int);
+    for (const auto& region_par : stats.anomalias_detectadas_por_region) {
+        memcpy(ptr, region_par.first.c_str(), region_par.first.size() + 1);
+        ptr += region_par.first.size() + 1;
+
+        int total_candidatos = region_par.second.size();
+        memcpy(ptr, &total_candidatos, sizeof(int)); ptr += sizeof(int);
+        for (const auto& cand_par : region_par.second) {
+            memcpy(ptr, cand_par.first.c_str(), cand_par.first.size() + 1);
+            ptr += cand_par.first.size() + 1;
+            memcpy(ptr, &cand_par.second, sizeof(int)); ptr += sizeof(int);
+        }
+    }
+
+    // SERIALIZAR anomalias_detectadas_por_candidato
+    int total_candidatos_anom = stats.anomalias_detectadas_por_candidato.size();
+    memcpy(ptr, &total_candidatos_anom, sizeof(int)); ptr += sizeof(int);
+    for (const auto& cand_par : stats.anomalias_detectadas_por_candidato) {
+        memcpy(ptr, cand_par.first.c_str(), cand_par.first.size() + 1);
+        ptr += cand_par.first.size() + 1;
+
+        int total_regiones = cand_par.second.size();
+        memcpy(ptr, &total_regiones, sizeof(int)); ptr += sizeof(int);
+        for (const auto& region_par : cand_par.second) {
+            memcpy(ptr, region_par.first.c_str(), region_par.first.size() + 1);
+            ptr += region_par.first.size() + 1;
+            memcpy(ptr, &region_par.second, sizeof(int)); ptr += sizeof(int);
+        }
+    }
+
 }
 
 Estadisticas deserializarEstadisticas(const std::vector<char>& buffer) {
@@ -144,6 +218,50 @@ Estadisticas deserializarEstadisticas(const std::vector<char>& buffer) {
         std::string cand = ptr; ptr += cand.size() + 1;
         int cont; memcpy(&cont, ptr, sizeof(int)); ptr += sizeof(int);
         stats.votos_por_candidato[cand] = cont;
+    }
+    // DESERIALIZAR votos_por_candidato_por_region
+    int total_regiones;
+    memcpy(&total_regiones, ptr, sizeof(int)); ptr += sizeof(int);
+    for (int i = 0; i < total_regiones; i++) {
+        std::string region = ptr; ptr += region.size() + 1;
+        int total_candidatos;
+        memcpy(&total_candidatos, ptr, sizeof(int)); ptr += sizeof(int);
+        for (int j = 0; j < total_candidatos; j++) {
+            std::string candidato = ptr; ptr += candidato.size() + 1;
+            int conteo;
+            memcpy(&conteo, ptr, sizeof(int)); ptr += sizeof(int);
+            stats.votos_por_candidato_por_region[region][candidato] = conteo;
+        }
+    }
+
+    // DESERIALIZAR anomalias_detectadas_por_region
+    int total_regiones_anom;
+    memcpy(&total_regiones_anom, ptr, sizeof(int)); ptr += sizeof(int);
+    for (int i = 0; i < total_regiones_anom; i++) {
+        std::string region = ptr; ptr += region.size() + 1;
+        int total_candidatos;
+        memcpy(&total_candidatos, ptr, sizeof(int)); ptr += sizeof(int);
+        for (int j = 0; j < total_candidatos; j++) {
+            std::string candidato = ptr; ptr += candidato.size() + 1;
+            int conteo;
+            memcpy(&conteo, ptr, sizeof(int)); ptr += sizeof(int);
+            stats.anomalias_detectadas_por_region[region][candidato] = conteo;
+        }
+    }
+
+    // DESERIALIZAR anomalias_detectadas_por_candidato
+    int total_candidatos_anom;
+    memcpy(&total_candidatos_anom, ptr, sizeof(int)); ptr += sizeof(int);
+    for (int i = 0; i < total_candidatos_anom; i++) {
+        std::string candidato = ptr; ptr += candidato.size() + 1;
+        int total_regiones;
+        memcpy(&total_regiones, ptr, sizeof(int)); ptr += sizeof(int);
+        for (int j = 0; j < total_regiones; j++) {
+            std::string region = ptr; ptr += region.size() + 1;
+            int conteo;
+            memcpy(&conteo, ptr, sizeof(int)); ptr += sizeof(int);
+            stats.anomalias_detectadas_por_candidato[candidato][region] = conteo;
+        }
     }
 
     return stats;

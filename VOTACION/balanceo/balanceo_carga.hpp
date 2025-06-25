@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <queue>
-
+#include <set>
 #include "VOTACION/common/estructura_votos.hpp"
 #include "VOTACION/common/config.hpp"
 #include "VOTACION/protocolo/protocolo.hpp"
@@ -12,6 +12,6 @@
 
 void balanceoCarga(std::vector<RendimientoNodo>& rendimiento_nodos,
                     std:: queue<LoteTrabajo>& cola_trabajo,
-                    int num_nodos);
+                    int num_nodos, const std::set<int>& nodos_desocupados);
 
 #endif

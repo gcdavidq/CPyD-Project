@@ -22,22 +22,21 @@ int main() {
 #ifdef USE_CUDA
     // GPU (CUDA)
     cout << "=== Detectando anomalías con CUDA ===" << endl;
-    vector<bool> anomalias_reales;
-    for (const auto& voto : votos) {
-        anomalias_reales.push_back(voto.anomalo);
+    ResultadoDeteccion R =  deteccion::detectarAnomaliasCUDA(votos);
+    for (const auto& voto : R.validos) {
+        cout << voto.dni << " - Anomalo: " << voto.anomalo
+            << ", Anomalia detectada: " << voto.anomalia_detectada << endl;
     }
-    vector<bool> anomalias_detectadas;
-    detectarAnomaliasCUDA(anomalias_reales, anomalias_detectadas);
+    for (const auto& voto : R.anomalos) {
+        cout << voto.dni << " - Anomalo: " << voto.anomalo
+            << ", Anomalia detectada: " << voto.anomalia_detectada << endl;
+    }
 
-    for (size_t i = 0; i < anomalias_detectadas.size(); ++i) {
-        cout << votos[i].dni << " - Real: " << anomalias_reales[i]
-             << ", Detectada: " << anomalias_detectadas[i] << endl;
-    }
 
 #else
     // CPU
     cout << "=== Detectando anomalías con CPU ===" << endl;
-    ResultadoDeteccion R = detectarAnomaliasCPU(votos);
+    ResultadoDeteccion R = deteccion::detectarAnomaliasCPU(votos);
     for (const auto& voto : R.validos) {
         cout << voto.dni << " - Anomalo: " << voto.anomalo
              << ", Anomalia detectada: " << voto.anomalia_detectada << endl;

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="../static/css/styles.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a href="/" class="logo">VotaPe</a>
+    <button
+      class="menu-toggle"
+      aria-controls="main-menu"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      ☰
+    </button>
+    <nav class="main-menu" id="main-menu">
+
+    </nav>
+  </div>
+</header>
+
+    <div class="wrapper login-innovador">
+        <form action="">
+            <div class="login-icon">
+                <!-- SVG de usuario animado -->
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="#1976d2" opacity="0.10"/>
+                    <circle cx="32" cy="26" r="12" fill="#1976d2" />
+                    <ellipse cx="32" cy="46" rx="16" ry="10" fill="#1976d2" opacity="0.7"/>
+                    <circle cx="32" cy="26" r="12" fill="url(#userGrad)" opacity="0.7"/>
+                    <defs>
+                      <radialGradient id="userGrad" cx="0.5" cy="0.5" r="0.7">
+                        <stop offset="0%" stop-color="#63a4ff"/>
+                        <stop offset="100%" stop-color="#1976d2"/>
+                      </radialGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1>Iniciar Sesión</h1>
+            <div class="input-box input-efecto">
+                <input type="text" placeholder="DNI" required>
+                <span class="input-icon">
+                    <svg width="22" height="22" fill="none"><circle cx="11" cy="8" r="5" stroke="#1976d2" stroke-width="2"/><ellipse cx="11" cy="16" rx="7" ry="4" stroke="#1976d2" stroke-width="2"/></svg>
+                </span>
+            </div>
+            <div class="input-box input-efecto">
+                <input type="password" placeholder="Contraseña" required>
+                <span class="input-icon">
+                    <svg width="22" height="22" fill="none"><rect x="4" y="10" width="14" height="8" rx="2" stroke="#1976d2" stroke-width="2"/><circle cx="11" cy="14" r="1.5" fill="#1976d2"/></svg>
+                </span>
+            </div>
+            <div class="remember-forget">
+                <label><input type="checkbox">Recordarme</label>
+                <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" class="btn btn-login">Iniciar Sesión</button>
+        </form>
+    </div>
+    <script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  window.location.href = '/mapa'; // Redirigir al mapa después de iniciar sesión
+});
+</script>
+    
+</body>
+</html>

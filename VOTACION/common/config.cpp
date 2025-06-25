@@ -1,5 +1,6 @@
 #include "VOTACION/common/config.hpp"
 #include <omp.h>
+#include <cstring> // para strncpy
 
 #ifdef USE_CUDA
 #include <cuda_runtime.h>
@@ -11,7 +12,7 @@ CapacidadNodo detectarCapacidadNodo() {
     capacidad.tiene_gpu = false;
     capacidad.rendimiento_relativo = 1.0;
     capacidad.gpu_memoria_mb = 0;
-    capacidad.gpu_modelo = "ninguno";
+    capacidad.gpu_modelo[0] = '\0'; // Inicializar string vacío
     capacidad.velocidad_procesamiento = 0.0;
     capacidad.lotes_pendientes = 0;
 
@@ -23,7 +24,8 @@ CapacidadNodo detectarCapacidadNodo() {
         cudaDeviceProp deviceProp;
         cudaGetDeviceProperties(&deviceProp, 0);
         capacidad.gpu_memoria_mb = deviceProp.totalGlobalMem / (1024 * 1024);
-        capacidad.gpu_modelo = deviceProp.name;
+        strncpy(capacidad.gpu_modelo, deviceProp.name, sizeof(capacidad.gpu_modelo));
+        capacidad.gpu_modelo[sizeof(capacidad.gpu_modelo) - 1] = '\0'; // evitar overflow
         capacidad.rendimiento_relativo = 2.0 + (deviceProp.multiProcessorCount / 20.0);
     }
 #endif
