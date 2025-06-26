@@ -56,6 +56,9 @@ struct ResultadoDeteccion { //NUEVO
     double recall;
     double f1_score;
 };
+
+
+
 struct EstadisticasRegion { //NUEVO
     double media_votos_minuto;
     double desviacion_votos_minuto;
@@ -72,13 +75,13 @@ struct EstadisticasRegion { //NUEVO
  */
 ResultadoDeteccion detectarAnomaliasCPU(const std::vector<Voto>& votos, int NUM_HILOS_PARA_ALG);
 
-#ifdef USE_CUDA
+
 /**
  * @brief Detecta anomalías usando la GPU vía CUDA.
  * @param votos   Copia (const ref) del lote; no se modifica.
  * @return        ResultadoDeteccion con listas separadas.
  */
-ResultadoDeteccion detectarAnomaliasCUDA(const std::vector<Voto>& votos);
-#endif
+
+
 
 } // namespace deteccion

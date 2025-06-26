@@ -19,6 +19,8 @@ CapacidadNodo detectarCapacidadNodo() {
 #ifdef USE_CUDA
     int deviceCount = 0;
     cudaError_t error = cudaGetDeviceCount(&deviceCount);
+    std::cerr << "[CUDA DEBUG] cudaGetDeviceCount returned: " << cudaGetErrorString(error) << std::endl;
+
     if (error == cudaSuccess && deviceCount > 0) {
         capacidad.tiene_gpu = true;
         cudaDeviceProp deviceProp;
@@ -29,6 +31,7 @@ CapacidadNodo detectarCapacidadNodo() {
         capacidad.rendimiento_relativo = 2.0 + (deviceProp.multiProcessorCount / 20.0);
     }
 #endif
+
 
     return capacidad;
 }

@@ -295,7 +295,7 @@ while (continuar_procesando) {
         */
 
         // Enviar información de rendimiento al maestro
-        imprimirInfoNodoWeb(nodo_id, ren);
+        //imprimirInfoNodoWeb(nodo_id, ren);
         vector<char> buffer_ren(sizeof(RendimientoNodo));
         memcpy(buffer_ren.data(), &ren, sizeof(RendimientoNodo));
         MPI_Send(buffer_ren.data(), buffer_ren.size(), MPI_CHAR, nodo_maestro, TAG_RENDIMIENTO_NODO, MPI_COMM_WORLD);

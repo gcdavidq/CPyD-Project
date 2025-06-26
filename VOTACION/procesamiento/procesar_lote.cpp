@@ -1,5 +1,6 @@
 #include "VOTACION/procesamiento/procesar_lote.hpp"
 #include "VOTACION/deteccion/detectar_anomalias.hpp"
+#include "VOTACION/deteccion/detectar_anomalias_cuda.hpp"
 #include <iostream>
 #include "VOTACION/common/estructura_votos.hpp"
 #include "VOTACION/common/config.hpp"
@@ -69,12 +70,13 @@ Estadisticas procesarLote(LoteTrabajo& lote, bool tiene_gpu) {
     
 
     deteccion::ResultadoDeteccion resultado;
+    deteccion_cuda:: ResultadoDeteccionCUDA resultado_cuda; 
 
     if (tiene_gpu) {
 #ifdef USE_CUDA
-        resultado = deteccion::detectarAnomaliasCUDA(lote.votos);
-        lote.votos = resultado.validos;
-        lote.votos.insert(lote.votos.end(), resultado.anomalos.begin(), resultado.anomalos.end());
+        resultado_cuda = deteccion_cuda::detectarAnomaliasCUDA(lote.votos);
+        lote.votos = resultado_cuda.validos;
+        lote.votos.insert(lote.votos.end(), resultado_cuda.anomalos.begin(), resultado_cuda.anomalos.end());
 #else
         resultado = deteccion::detectarAnomaliasCPU(lote.votos, NUM_HILOS_PARA_ALG);
         lote.votos = resultado.validos;

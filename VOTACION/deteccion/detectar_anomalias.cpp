@@ -203,7 +203,7 @@ namespace deteccion {
             if (v.anomalo && !v.anomalia_detectada) {
                 FN++; // Anómalo real no detectado
             } else if (!v.anomalo && !v.anomalia_detectada) {
-                VN++; // Correctamente identificado como normal
+                VN++; // Correctamente identificado como normazl
             }
         }
 
