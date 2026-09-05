@@ -1,0 +1,249 @@
+@import "./tokens.css";
+
+/* Inter y JetBrains Mono con fallback real al stack del sistema. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Las cifras se comparan en vertical constantemente (columnas de votos, cargas
+   por nodo). Sin cifras tabulares las columnas bailan al actualizarse. */
+.cifra,
+table td,
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: var(--fuente-mono);
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+a {
+  color: var(--acento);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Foco visible y consistente: se navega con teclado. */
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: var(--radio-sm);
+}
+
+/* ---------------------------------------------------------------- layout -- */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenido {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.rejilla {
+  display: grid;
+  gap: 16px;
+}
+
+.rejilla.dos    { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rejilla.tres   { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rejilla.cuatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rejilla.ancha-estrecha { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); }
+
+@media (max-width: 1080px) {
+  .rejilla.cuatro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rejilla.tres,
+  .rejilla.ancha-estrecha { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .rejilla.dos, .rejilla.cuatro { grid-template-columns: minmax(0, 1fr); }
+  .contenido { padding: 20px 16px 48px; }
+}
+
+/* ---------------------------------------------------------------- tarjeta -- */
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tarjeta-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.tarjeta-titulo {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.tarjeta-nota {
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.tarjeta-cuerpo {
+  padding: 18px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tarjeta-cuerpo.sin-relleno { padding: 0; }
+
+/* --------------------------------------------------------------- métricas -- */
+
+.metrica {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px 18px;
+  box-shadow: var(--sombra);
+}
+
+.metrica-etiqueta {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--texto-3);
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+}
+
+.metrica-valor {
+  margin-top: 6px;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.metrica-pie {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+/* ------------------------------------------------------------------ varios -- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.pill.neutro { background: var(--superficie-alt); color: var(--texto-2); border-color: var(--borde); }
+.pill.bien   { background: var(--bien-bg);  color: var(--bien);  border-color: color-mix(in srgb, var(--bien) 25%, transparent); }
+.pill.aviso  { background: var(--aviso-bg); color: var(--aviso); border-color: color-mix(in srgb, var(--aviso) 25%, transparent); }
+.pill.grave  { background: var(--grave-bg); color: var(--grave); border-color: color-mix(in srgb, var(--grave) 25%, transparent); }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tabla th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texto-3);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+.tabla td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--texto-2);
+}
+.tabla tbody tr:last-child td { border-bottom: none; }
+.tabla tbody tr:hover { background: var(--superficie-hover); }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.vacio {
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--texto-3);
+  font-size: 13px;
+}
+
+/* Contenido ancho (tablas, gráficos) se desplaza dentro de su caja;
+   la página nunca hace scroll horizontal. */
+.scroll-x {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

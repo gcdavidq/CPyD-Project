@@ -1,0 +1,23 @@
+name: Mantener viva la demo
+
+# El plan gratuito de Render duerme el servicio tras 15 minutos sin trafico, y
+# despertarlo tarda casi un minuto. Un ping cada 14 minutos lo evita, de modo
+# que la demo publica responde siempre al instante.
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Despertar la demo
+        run: |
+          if [ -z "${{ vars.DEMO_URL }}" ]; then
+            echo "Define la variable de repositorio DEMO_URL con la URL de Render."
+            echo "GitHub > Settings > Secrets and variables > Actions > Variables"
+            exit 0
+          fi
+          codigo=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "${{ vars.DEMO_URL }}/health")
+          echo "Respuesta: $codigo"

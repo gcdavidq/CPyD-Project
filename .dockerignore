@@ -1,0 +1,14 @@
+# Contexto de la imagen del cluster MPI: solo hacen falta las fuentes.
+.git
+DATA
+build
+cmake-build-*
+*.o
+docs
+benchmarks/resultados
+DASHBOARD_VOTACION/frontend/node_modules
+DASHBOARD_VOTACION/static/dist
+**/__pycache__
+*.pyc
+.env
+*.log

@@ -1,4 +1,12 @@
-flask==2.3.3
-flask-socketio==5.3.6
-python-socketio==5.8.0
-requests==2.31.0
+# Dashboard web.
+#
+# No se usa eventlet ni gevent a proposito: ambos van por detras de las
+# versiones recientes de Python y rompen la instalacion en distribuciones
+# nuevas. Con el modo "threading" de Flask-SocketIO el transporte es
+# long-polling, suficiente para actualizaciones cada pocos segundos.
+Flask==3.0.3
+Flask-SocketIO==5.3.6
+python-socketio==5.11.4
+python-engineio==4.9.1
+gunicorn==22.0.0
+requests==2.32.3

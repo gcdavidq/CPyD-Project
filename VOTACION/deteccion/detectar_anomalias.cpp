@@ -13,6 +13,7 @@
 #include <numeric>
 #include <functional>
 #include <iostream>
+#include "VOTACION/common/config.hpp"
 
 using namespace std;
 
@@ -22,15 +23,12 @@ namespace deteccion {
     ResultadoDeteccion detectarAnomaliasCPU(const std::vector<Voto>& votos, int num_hilos) {
         int max_hilos = omp_get_max_threads();
         if (num_hilos > max_hilos) {
+            cout << "[DETECCION] Se pidieron " << num_hilos
+                 << " hilos pero el nodo solo ofrece " << max_hilos
+                 << ". Se usaran " << max_hilos << ".\n";
             num_hilos = max_hilos;
-            cout << "=====================================================" << endl;
-            cout << "Número de hilos solicitado excede el máximo, se usará: " << num_hilos << endl;
-            cout << "=====================================================\n" << endl;
-        } else {
-            cout << "=======================" << endl;
-            cout << "Usando " << num_hilos << " hilos." << endl;
-            cout << "=======================\n" << endl;
         }
+        if (num_hilos < 1) num_hilos = 1;
 
         ResultadoDeteccion R;
         int total_votos = votos.size();
@@ -102,9 +100,21 @@ namespace deteccion {
         int umbral_flujo = static_cast<int>(media_flujo + 2.0 * std_flujo);
         umbral_flujo = std::max(umbral_flujo, 100); // Mínimo 100 para casos extremos
 
-        cout << "Umbrales calculados estadísticamente:" << endl;
-        cout << "- Concentración: " << umbral_concentracion << " (media: " << media_conc << ", std: " << std_conc << ")" << endl;
-        cout << "- Flujo: " << umbral_flujo << " (media: " << media_flujo << ", std: " << std_flujo << ")" << endl;
+        if (VERBOSE) {
+            cout << "Umbrales calculados estadisticamente:\n"
+                 << "  - Concentracion: " << umbral_concentracion
+                 << " (media: " << media_conc << ", std: " << std_conc << ")\n"
+                 << "  - Flujo: " << umbral_flujo
+                 << " (media: " << media_flujo << ", std: " << std_flujo << ")" << endl;
+        }
+
+        // A partir de aqui los contadores son de SOLO LECTURA. Se exponen como
+        // referencias const para que dentro de la region paralela solo pueda
+        // usarse .at(): operator[] no es const, insertaria elementos y podria
+        // rehashear el mapa desde varios hilos a la vez (condicion de carrera).
+        const auto& dni_conteo       = contador_dni_global;
+        const auto& conc_conteo      = contador_region_candidato_global;
+        const auto& timestamp_conteo = contador_timestamp_global;
 
         // FASE 2: Clasificación paralela usando los patrones identificados
         std::vector<std::vector<Voto>> locales_validos(num_hilos);
@@ -117,10 +127,13 @@ namespace deteccion {
             int inicio = (total_votos * id) / num_hilos;
             int fin = (total_votos * (id + 1)) / num_hilos;
 
-            #pragma omp critical
-            {
-                cout << "Hilo " << id << " procesará votos desde " << inicio << " hasta " << fin - 1
-                    << " (total: " << (fin - inicio) << " votos)" << endl;
+            // Nota: aqui habia un cout dentro de #pragma omp critical. Serializaba
+            // todos los hilos nada mas entrar al bucle y falseaba las mediciones
+            // de speedup del propio proyecto.
+            if (VERBOSE) {
+                #pragma omp critical
+                cout << "Hilo " << id << " procesa votos [" << inicio
+                     << ", " << fin << ")\n";
             }
 
             for (int i = inicio; i < fin; ++i) {
@@ -131,7 +144,7 @@ namespace deteccion {
                 int tipo = -1;
 
                 // --- Anomalía 1: Duplicados por DNI (usar contadores globales) ---
-                if (contador_dni_global[v.dni] > 1) {
+                if (dni_conteo.at(v.dni) > 1) {
                     es_anomalo = true;
                     tipo = 1;
                     duplicados[id]++;
@@ -139,7 +152,7 @@ namespace deteccion {
 
                 // --- Anomalía 2: Concentración sospechosa (usar umbral estadístico) ---
                 std::string clave_conc = v.region + "|" + v.candidato;
-                if (contador_region_candidato_global[clave_conc] > umbral_concentracion) {
+                if (conc_conteo.at(clave_conc) > umbral_concentracion) {
                     if (!es_anomalo) { // Solo cambiar tipo si no es ya anómalo
                         tipo = 2;
                     }
@@ -149,7 +162,7 @@ namespace deteccion {
 
                 // --- Anomalía 3: Flujo excesivo (usar umbral estadístico) ---
                 std::string t_clave = v.timestamp.substr(0, 16);
-                if (contador_timestamp_global[t_clave] > umbral_flujo) {
+                if (timestamp_conteo.at(t_clave) > umbral_flujo) {
                     if (!es_anomalo) { // Solo cambiar tipo si no es ya anómalo
                         tipo = 3;
                     }
@@ -213,24 +226,27 @@ namespace deteccion {
         R.f1_score = (R.precision + R.recall) > 0.0 ? 
                      2.0 * R.precision * R.recall / (R.precision + R.recall) : 0.0;
 
-        // Información de diagnóstico
-        cout << "\n=== RESULTADOS DE DETECCIÓN ===" << endl;
-        cout << "Total de votos procesados: " << total_votos << endl;
-        cout << "Votos válidos detectados: " << R.validos.size() << endl;
-        cout << "Votos anómalos detectados: " << R.anomalos.size() << endl;
-        cout << "Anomalías por duplicados: " << R.anomalias_duplicados << endl;
-        cout << "Anomalías por concentración: " << R.anomalias_concentracion << endl;
-        cout << "Anomalías por flujo excesivo: " << R.anomalias_flujo_excesivo << endl;
-        cout << "\n=== MÉTRICAS ESTADÍSTICAS ===" << endl;
-        cout << "VP (Verdaderos Positivos): " << VP << endl;
-        cout << "FP (Falsos Positivos): " << FP << endl;
-        cout << "FN (Falsos Negativos): " << FN << endl;
-        cout << "VN (Verdaderos Negativos): " << VN << endl;
-        cout << "Precisión: " << R.precision << endl;
-        cout << "Recall: " << R.recall << endl;
-        cout << "F1-Score: " << R.f1_score << endl;
-        cout << "Tiempo de procesamiento: " << R.tiempo_proceso_ms << " ms" << endl;
-        cout << "===============================" << endl;
+        // Volcado de diagnostico: solo con VOTACION_VERBOSE=1, porque en una
+        // ejecucion real se llama una vez por lote y por nodo.
+        if (VERBOSE) {
+            cout << "\n=== RESULTADOS DE DETECCIÓN ===" << endl;
+            cout << "Total de votos procesados: " << total_votos << endl;
+            cout << "Votos válidos detectados: " << R.validos.size() << endl;
+            cout << "Votos anómalos detectados: " << R.anomalos.size() << endl;
+            cout << "Anomalías por duplicados: " << R.anomalias_duplicados << endl;
+            cout << "Anomalías por concentración: " << R.anomalias_concentracion << endl;
+            cout << "Anomalías por flujo excesivo: " << R.anomalias_flujo_excesivo << endl;
+            cout << "\n=== MÉTRICAS ESTADÍSTICAS ===" << endl;
+            cout << "VP (Verdaderos Positivos): " << VP << endl;
+            cout << "FP (Falsos Positivos): " << FP << endl;
+            cout << "FN (Falsos Negativos): " << FN << endl;
+            cout << "VN (Verdaderos Negativos): " << VN << endl;
+            cout << "Precisión: " << R.precision << endl;
+            cout << "Recall: " << R.recall << endl;
+            cout << "F1-Score: " << R.f1_score << endl;
+            cout << "Tiempo de procesamiento: " << R.tiempo_proceso_ms << " ms" << endl;
+            cout << "===============================" << endl;
+        }
 
         return R;
     }

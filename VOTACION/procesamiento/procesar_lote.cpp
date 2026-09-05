@@ -1,6 +1,8 @@
 #include "VOTACION/procesamiento/procesar_lote.hpp"
 #include "VOTACION/deteccion/detectar_anomalias.hpp"
+#ifdef USE_CUDA
 #include "VOTACION/deteccion/detectar_anomalias_cuda.hpp"
+#endif
 #include <iostream>
 #include "VOTACION/common/estructura_votos.hpp"
 #include "VOTACION/common/config.hpp"
@@ -54,14 +56,6 @@ void mostrarVotosAnomalos(const ResultadoDeteccion& resultado) {
 }
 */
 Estadisticas procesarLote(LoteTrabajo& lote, bool tiene_gpu) {
-    std::vector<Voto>lote_votos=lote.votos;
-    int total_anom3=0;
-    for (const auto& voto : lote_votos) {
-        if (voto.anomalo) { total_anom3++;
-                        
-                }
-        }
-    std::cout << "[DEBUG] Votos anomalos antes de pasar a detectar anomalias CPU O GPU"<<total_anom3 << std::endl;
     
     
     Estadisticas stats;
@@ -70,7 +64,9 @@ Estadisticas procesarLote(LoteTrabajo& lote, bool tiene_gpu) {
     
 
     deteccion::ResultadoDeteccion resultado;
-    deteccion_cuda:: ResultadoDeteccionCUDA resultado_cuda; 
+#ifdef USE_CUDA
+    deteccion_cuda::ResultadoDeteccionCUDA resultado_cuda;
+#endif
 
     if (tiene_gpu) {
 #ifdef USE_CUDA
@@ -92,23 +88,24 @@ Estadisticas procesarLote(LoteTrabajo& lote, bool tiene_gpu) {
         lote.votos.insert(lote.votos.end(), resultado.anomalos.begin(), resultado.anomalos.end());
         
 
-        // Mostrar estadísticas
-        cout << "\n--- RESULTADO DE DETECCIÓN POR LOTE ---" << endl;
-        cout << "Votos válidos          : " << resultado.validos.size() << endl;
-        cout << "Votos anómalos detect. : " << resultado.anomalos.size() << endl;
-        cout << "Tiempo de ejecución    : " << resultado.tiempo_proceso_ms << " ms\n" << endl;
+        if (VERBOSE) {
+            cout << "\n--- RESULTADO DE DETECCIÓN POR LOTE ---" << endl;
+            cout << "Votos válidos          : " << resultado.validos.size() << endl;
+            cout << "Votos anómalos detect. : " << resultado.anomalos.size() << endl;
+            cout << "Tiempo de ejecución    : " << resultado.tiempo_proceso_ms << " ms\n" << endl;
         
-        cout << "Anomalías detectadas por tipo:" << endl;
-        cout << "  → Flujo excesivo         : " << resultado.anomalias_flujo_excesivo << endl;
-        cout << "  → Concentración candidato: " << resultado.anomalias_concentracion << endl;
-        cout << "  → DNIs duplicados        : " << resultado.anomalias_duplicados << endl;
+            cout << "Anomalías detectadas por tipo:" << endl;
+            cout << "  → Flujo excesivo         : " << resultado.anomalias_flujo_excesivo << endl;
+            cout << "  → Concentración candidato: " << resultado.anomalias_concentracion << endl;
+            cout << "  → DNIs duplicados        : " << resultado.anomalias_duplicados << endl;
         
-        cout << "\nMétricas de evaluación:" << endl;
-        cout << "  • Precisión: " << resultado.precision << endl;
-        cout << "  • Recall   : " << resultado.recall << endl;
-        cout << "  • F1 Score : " << resultado.f1_score << endl;
+            cout << "\nMétricas de evaluación:" << endl;
+            cout << "  • Precisión: " << resultado.precision << endl;
+            cout << "  • Recall   : " << resultado.recall << endl;
+            cout << "  • F1 Score : " << resultado.f1_score << endl;
         
         
+        }
     }
 
     stats.total_votos = lote.votos.size();

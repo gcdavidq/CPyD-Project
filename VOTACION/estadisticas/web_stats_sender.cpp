@@ -54,6 +54,7 @@ std::string WebStatsSender::estadisticasToJson(const Estadisticas& stats) {
     std::stringstream ss;
     ss << std::put_time(std::localtime(&time_t), "%H:%M:%S");
     root["ultimo_update"] = ss.str();
+    root["tiempo_procesamiento"] = tiempo_transcurrido;
 
     return Json::writeString(builder, root);
 }

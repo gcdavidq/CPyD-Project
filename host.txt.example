@@ -1,0 +1,14 @@
+# Fichero de hosts para mpirun en un cluster real de varias maquinas.
+#
+#   1. Copia este fichero:      cp host.txt.example host.txt
+#   2. Sustituye las IPs por las de tus nodos (deben verse entre si por SSH sin contrasena).
+#   3. Ejecuta:                 mpirun --hostfile host.txt -np 4 ./votacion
+#
+# "slots" = numero de procesos MPI que se lanzan en esa maquina.
+#
+# NOTA: para ejecutar todo en una sola maquina NO necesitas este fichero:
+#       mpirun -np 4 ./votacion
+
+192.168.1.101 slots=1
+192.168.1.102 slots=1
+192.168.1.103 slots=1

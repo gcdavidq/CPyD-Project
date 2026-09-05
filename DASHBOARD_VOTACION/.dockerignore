@@ -1,0 +1,9 @@
+# Sin esto, el `COPY frontend/` arrastraria node_modules entero (~200 MB) al
+# contexto de build y la cache de Docker se invalidaria en cada cambio.
+frontend/node_modules
+frontend/dist
+static/dist
+**/__pycache__
+*.pyc
+.env
+*.log

@@ -1,5 +1,68 @@
+# ---- Datos generados (pesados, se regeneran con SCRIPTS/generador_votos.py) ----
+DATA/
+*.csv
+!DASHBOARD_VOTACION/static/data/*.csv
+# Los resultados de los benchmarks SI se versionan: son la evidencia de las
+# cifras del README y ocupan unos pocos KB.
+!benchmarks/resultados/*.csv
+
+# ---- Artefactos de compilacion C++ ----
+build/
+cmake-build-*/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+!SCRIPTS/Makefile
+
+# ---- Ejecutables del proyecto (sin extension) ----
+/simulador_votacion
+/test_mpi
+/nodo_maestro
+/nodo_esclavo
+/votacion
+tests/test_anomalias
+tests/test_anomalias_cu
+tests/test_balanceo_carga
+tests/test_estadisticas
+tests/test_nodo_esclavo
+tests/test_procesar_lote
+tests/test_protocolo
+tests/test_simulacion_llegada
+VOTACION/esclavo/simulador
+VOTACION/deteccion/test_anomalias
+
+# ---- Frontend (React + Vite) ----
+# El build es artefacto: lo genera Docker y la CI, no se versiona.
+node_modules/
+DASHBOARD_VOTACION/static/dist/
+.vite/
+npm-debug.log*
+
+# ---- Python ----
 venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# ---- Entorno y secretos ----
+.env
+.env.local
+host.txt
+
+# ---- Salidas de ejecucion ----
+logs/
+*.log
+
+# ---- Editores / SO ----
 .vscode/
-DATA/
-.venv/DATA/
-DATA/
+.idea/
+.DS_Store
+Thumbs.db

@@ -25,7 +25,9 @@ using namespace std;
 
 
 void ejecutarNodoMaestro(int num_nodos){
-    WebStatsSender web_sender("http://localhost:5000");
+    WebStatsSender web_sender(URL_DASHBOARD);
+
+    config::imprimirConfiguracion();
 
     int esclavos_finalizados = 0;
     int esclavos_desocupados= 0; 
@@ -44,7 +46,6 @@ void ejecutarNodoMaestro(int num_nodos){
     
     vector<RendimientoNodo> rendimiento_nodos(num_nodos); //creamos un vector de rendimiento
     for (int i =0; i<num_nodos; i++){
-        web_sender.enviarInfoNodo(i, rendimiento_nodos[i]);
         rendimiento_nodos[i].nodo_id = i; //Asignamos el id del nodo
         rendimiento_nodos[i].tiempo_promedio_lote = 0.0f; //inicializamos el tiempo promedio
         rendimiento_nodos[i].lotes_completados = 0; //inicializamos los lotes completados
@@ -53,7 +54,9 @@ void ejecutarNodoMaestro(int num_nodos){
         rendimiento_nodos[i].carga_actual = 0.0f; //inicializamos la carga actual
         rendimiento_nodos[i].ultimo_reporte = chrono::system_clock::now(); //inicializamos el tiempo de reporte
         rendimiento_nodos[i].tiempo_comunicacion_mpi=0;
-        
+
+        // El envio va DESPUES de inicializar: antes se mandaba basura al dashboard.
+        web_sender.enviarInfoNodo(i, rendimiento_nodos[i]);
     }
 
     //Recibir informacion sobre capacidades de los nodos
@@ -106,7 +109,6 @@ void ejecutarNodoMaestro(int num_nodos){
     bool procesamiento_finalizado = false; //Variable para saber si el procesamiento ha finalizado
     bool todos_nodos_notificaron_fin = false;
     auto tiempo_ultima_actividad = chrono::system_clock::now();
-    const int TIMEOUT_FINALIZACION = 30; 
 
     cout << "→ Iniciando bucle principal del maestro..." << endl;
 
@@ -125,7 +127,9 @@ void ejecutarNodoMaestro(int num_nodos){
 
         //Comprobar si es momento de realizar un reporte
         chrono::duration<double> tiempo_desde_ultimo_reporte = ahora - ultimo_reporte;
-        if (tiempo_desde_ultimo_reporte.count() >= INTERVALO_REPORTE * SEGUNDOS_POR_MINUTO){
+        if (tiempo_desde_ultimo_reporte.count() >= INTERVALO_REPORTE_SEG){
+            chrono::duration<double> transcurrido = ahora - tiempo_inicio;
+            web_sender.fijarTiempoTranscurrido(transcurrido.count());
             imprimirEstadisticasWeb(estadisticas_globales, MAESTRO, web_sender); 
             ultimo_reporte = ahora;
         }
@@ -176,7 +180,11 @@ void ejecutarNodoMaestro(int num_nodos){
                     
                     lotes_completados++;
                     rendimiento_nodos[nodo_origen].lotes_completados++;
-                    
+
+                    // El contador de lotes por nodo tambien viaja al dashboard:
+                    // es lo que permite ver como se reparte el trabajo.
+                    web_sender.enviarInfoNodo(nodo_origen, rendimiento_nodos[nodo_origen]);
+
                     break;
                 }
                 
@@ -225,8 +233,15 @@ void ejecutarNodoMaestro(int num_nodos){
                     rendimiento_nodos[nodo_origen].tiempo_promedio_lote = ren.tiempo_promedio_lote;
                     rendimiento_nodos[nodo_origen].tiempo_comunicacion_mpi = ren.tiempo_comunicacion_mpi;
                     rendimiento_nodos[nodo_origen].carga_actual = ren.carga_actual;
+                    rendimiento_nodos[nodo_origen].num_hilos = ren.num_hilos;
+                    rendimiento_nodos[nodo_origen].tiene_gpu = ren.tiene_gpu;
                     rendimiento_nodos[nodo_origen].ultimo_reporte = chrono::system_clock::now();
-                    
+
+                    // Reenviar al dashboard. Antes estas metricas se recibian y
+                    // se guardaban, pero no salian de aqui: el panel web solo
+                    // veia el estado inicial de los nodos, todo a cero.
+                    web_sender.enviarInfoNodo(nodo_origen, rendimiento_nodos[nodo_origen]);
+
                     break;
                 }
                 
@@ -301,7 +316,7 @@ void ejecutarNodoMaestro(int num_nodos){
         // Debug periódico del estado
         static auto ultimo_debug = chrono::system_clock::now();
         if (chrono::duration_cast<chrono::seconds>(ahora - ultimo_debug).count() >= 10) {
-            cout << "→ [DEBUG] Estado actual: " 
+            if (VERBOSE) cout << "[DEBUG] Estado actual: " 
                  << esclavos_finalizados << " finalizados, " 
                  << esclavos_desocupados << " desocupados, " 
                  << cola_trabajo.size() << " trabajos pendientes" << endl;
@@ -321,6 +336,7 @@ void ejecutarNodoMaestro(int num_nodos){
     // Imprimir resultados finales
     cout << "\n========== RESULTADOS FINALES ==========\n";
     chrono::duration<double> tiempo_total = chrono::system_clock::now() - tiempo_inicio;
+    web_sender.fijarTiempoTranscurrido(tiempo_total.count());
     cout << "Tiempo total de procesamiento: " << tiempo_total.count() << " segundos" << endl;
     cout << "Total lotes procesados: " << lotes_completados << endl;
     

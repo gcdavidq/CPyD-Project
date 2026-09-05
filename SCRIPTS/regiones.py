@@ -1,158 +1,109 @@
-#REGION1
-regiones = [
-    "Piura",
-    "Lambayeque",
-    "La Libertad",
-    "San Martín",
-    "Ucayali",
-    "Tumbes",
-    "Amazonas"
+# -*- coding: utf-8 -*-
+"""
+Division territorial del simulador electoral.
+
+El Peru se reparte en 4 macro-regiones. Cada una la procesa un nodo esclavo
+distinto del cluster MPI, de modo que el numero de region coincide con el rank
+del proceso que la atiende:
+
+    rank 1 -> region 1 (Costa y Sierra Norte)
+    rank 2 -> region 2 (Sierra Central)
+    rank 3 -> region 3 (Sur y Oriente)
+    rank 4 -> region 4 (Lima Metropolitana)
+
+Las poblaciones son el numero aproximado de personas en edad de votar por
+departamento. NOTA: este fichero antes redefinia `regiones` y `poblacion_region`
+una y otra vez, por lo que en la practica solo sobrevivia el ultimo bloque
+(Lima) y las otras tres regiones eran inalcanzables.
+"""
+
+# Partidos que aparecen en la papeleta simulada.
+CANDIDATOS = [
+    "APP",
+    "APRA",
+    "FUERZA POPULAR",
+    "PERU LIBRE",
+    "AVANZA PAIS",
 ]
 
-# 10%
-poblacion_region = {
-    "Piura": 216080,
-    "Lambayeque": 140070,
-    "La Libertad": 207320,
-    "San Martín": 93940,
-    "Ucayali": 57120,
-    "Tumbes": 26300,
-    "Amazonas": 43320
+# Poblacion electoral al 100%. Las escalas menores se obtienen multiplicando.
+REGIONES = {
+    1: {
+        "nombre": "Costa y Sierra Norte",
+        "poblacion": {
+            "Piura":       2160800,
+            "Lambayeque":  1400700,
+            "La Libertad": 2073200,
+            "San Martin":   939400,
+            "Ucayali":      571200,
+            "Tumbes":       263000,
+            "Amazonas":     433200,
+        },
+    },
+    2: {
+        "nombre": "Sierra Central",
+        "poblacion": {
+            "Cajamarca":    1538900,
+            "Ancash":       1262900,
+            "Pasco":         293500,
+            "Huanuco":       828000,
+            "Junin":        1446100,
+            "Huancavelica":  397700,
+            "Apurimac":      467600,
+        },
+    },
+    3: {
+        "nombre": "Sur y Oriente",
+        "poblacion": {
+            "Arequipa":      1628100,
+            "Cusco":         1396100,
+            "Puno":          1362100,
+            "Ayacucho":       711300,
+            "Ica":            997400,
+            "Moquegua":       206800,
+            "Tacna":          386900,
+            "Loreto":        1012000,
+            "Madre de Dios":  162500,
+        },
+    },
+    4: {
+        "nombre": "Lima Metropolitana",
+        "poblacion": {
+            "Lima": 12411000,
+        },
+    },
 }
 
-# 50%
-poblacion_region = {
-    "Piura": 1080400,
-    "Lambayeque": 700350,
-    "La Libertad": 1036600,
-    "San Martín": 469700,
-    "Ucayali": 285600,
-    "Tumbes": 131500,
-    "Amazonas": 216600
-}
+# Escalas disponibles: porcentaje de la poblacion que se simula.
+# 10 es suficiente para pruebas y demos; 100 genera decenas de millones de votos.
+ESCALAS = (10, 50, 100)
 
-# 100%
-poblacion_region = {
-    "Piura": 2160800,
-    "Lambayeque": 1400700,
-    "La Libertad": 2073200,
-    "San Martín": 939400,
-    "Ucayali": 571200,
-    "Tumbes": 263000,
-    "Amazonas": 433200
-}
 
-#REGION 2
-regiones = [
-    "Cajamarca",
-    "Áncash",
-    "Pasco",
-    "Huánuco",
-    "Junín",
-    "Huancavelica",
-    "Apurímac"
-]
+def poblacion_de(region_id, escala=100):
+    """Devuelve {departamento: electores} para una region y una escala dadas."""
+    if region_id not in REGIONES:
+        disponibles = ", ".join(str(r) for r in sorted(REGIONES))
+        raise ValueError(
+            "Region %r desconocida. Disponibles: %s" % (region_id, disponibles)
+        )
+    if escala not in ESCALAS:
+        disponibles = ", ".join(str(e) for e in ESCALAS)
+        raise ValueError(
+            "Escala %r no soportada. Disponibles: %s" % (escala, disponibles)
+        )
 
-# 10%
-poblacion_region = {
-    "Cajamarca": 153890,
-    "Áncash": 126290,
-    "Pasco": 29350,
-    "Huánuco": 82800,
-    "Junín": 144610,
-    "Huancavelica": 39770,
-    "Apurímac": 46760
-}
+    factor = escala / 100.0
+    return {
+        departamento: int(habitantes * factor)
+        for departamento, habitantes in REGIONES[region_id]["poblacion"].items()
+    }
 
-# 50%
-poblacion_region = {
-    "Cajamarca": 769450,
-    "Áncash": 631450,
-    "Pasco": 146750,
-    "Huánuco": 414000,
-    "Junín": 723050,
-    "Huancavelica": 198850,
-    "Apurímac": 233800
-}
 
-# 100%
-poblacion_region = {
-    "Cajamarca": 1538900,
-    "Áncash": 1262900,
-    "Pasco": 293500,
-    "Huánuco": 828000,
-    "Junín": 1446100,
-    "Huancavelica": 397700,
-    "Apurímac": 467600
-}
+def nombre_de(region_id):
+    """Nombre legible de la region."""
+    return REGIONES[region_id]["nombre"]
 
-#REGION 3
-regiones = [
-    "Arequipa",
-    "Cusco",
-    "Puno",
-    "Ayacucho",
-    "Ica",
-    "Moquegua",
-    "Tacna",
-    "Loreto",
-    "Madre de Dios"
-]
 
-# 10%
-poblacion_region = {
-    "Arequipa": 162810,
-    "Cusco": 139610,
-    "Puno": 136210,
-    "Ayacucho": 71130,
-    "Ica": 99740,
-    "Moquegua": 20680,
-    "Tacna": 38690,
-    "Loreto": 101200,
-    "Madre de Dios": 16250
-}
-
-# 50%
-poblacion_region = {
-    "Arequipa": 814050,
-    "Cusco": 698050,
-    "Puno": 681050,
-    "Ayacucho": 355650,
-    "Ica": 498700,
-    "Moquegua": 103400,
-    "Tacna": 193450,
-    "Loreto": 506000,
-    "Madre de Dios": 81250
-}
-
-# 100%
-poblacion_region = {
-    "Arequipa": 1628100,
-    "Cusco": 1396100,
-    "Puno": 1362100,
-    "Ayacucho": 711300,
-    "Ica": 997400,
-    "Moquegua": 206800,
-    "Tacna": 386900,
-    "Loreto": 1012000,
-    "Madre de Dios": 162500
-}
-
-#LIMA:
-regiones = ["Lima"]
-
-# 10%
-poblacion_region = {
-    "Lima": 1241100
-}
-
-# 50%
-poblacion_region = {
-    "Lima": 6205500
-}
-
-# 100%
-poblacion_region = {
-    "Lima": 12411000
-}
-
+def departamentos_de(region_id):
+    """Lista de departamentos que componen la region."""
+    return list(REGIONES[region_id]["poblacion"].keys())
