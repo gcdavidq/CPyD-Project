@@ -1,0 +1,17 @@
+# Normaliza los finales de linea al guardar en el repositorio.
+* text=auto eol=lf
+
+# Estos DEBEN ir con LF: con CRLF el interprete del contenedor falla con
+# "bad interpreter: no such file or directory".
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+
+# Ficheros binarios: que git no los toque.
+*.png           binary
+*.jpg           binary
+*.geojson       text eol=lf
+
+# Para que GitHub no cuente la dependencia empotrada como codigo propio.
+tests/third_party/*  linguist-vendored

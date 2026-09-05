@@ -1,0 +1,103 @@
+.mapa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mapa-svg {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  display: block;
+}
+
+.mapa-dep {
+  stroke: var(--superficie);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.3s ease, stroke 0.12s ease;
+  outline: none;
+}
+
+.mapa-dep.sin-datos {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* Se realza con el trazo, no cambiando el relleno: el color codifica el
+   valor y no debe alterarse al pasar por encima. */
+.mapa-dep.encima:not(.sin-datos) {
+  stroke: var(--texto);
+  stroke-width: 1.6;
+}
+
+.mapa-dep.seleccionado {
+  stroke: var(--acento-fuerte);
+  stroke-width: 2.2;
+}
+
+.mapa-dep:focus-visible {
+  stroke: var(--acento);
+  stroke-width: 2.4;
+}
+
+.mapa-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  background: var(--superficie);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-sm);
+  box-shadow: var(--sombra-md);
+  padding: 6px 10px;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 5;
+}
+
+.mapa-tooltip strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.mapa-tooltip span {
+  font-size: 11.5px;
+  color: var(--texto-2);
+}
+
+.mapa-leyenda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--texto-3);
+}
+
+.mapa-leyenda-rampa {
+  display: flex;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+}
+
+.mapa-leyenda-rampa i {
+  display: block;
+  width: 26px;
+  height: 9px;
+}
+
+.mapa-leyenda-texto {
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-leyenda-unidad {
+  margin-left: 2px;
+  color: var(--texto-3);
+}

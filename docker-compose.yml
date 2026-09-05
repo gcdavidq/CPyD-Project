@@ -1,0 +1,61 @@
+# =============================================================================
+#  Sistema de Votacion Distribuida - entorno completo
+#
+#      docker compose up --build
+#
+#  Levanta dos servicios:
+#    dashboard  el panel web en http://localhost:5000
+#    cluster    el cluster MPI (1 maestro + 4 esclavos) que le envia datos
+#
+#  El cluster genera sus propios datos la primera vez y termina solo cuando
+#  acaba de procesarlos. El dashboard se queda escuchando.
+# =============================================================================
+
+services:
+  dashboard:
+    build:
+      context: ./DASHBOARD_VOTACION
+    container_name: votacion-dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      MODO_DASHBOARD: ${MODO_DASHBOARD:-live}
+      # Pon GRABAR_EJECUCION=1 para dejar grabada esta ejecucion y poder
+      # reproducirla luego en la demo publica.
+      GRABAR_EJECUCION: ${GRABAR_EJECUCION:-0}
+      SECRET_KEY: ${SECRET_KEY:-clave-solo-para-desarrollo-local}
+      FLASK_DEBUG: "0"
+    volumes:
+      # La grabacion se persiste fuera del contenedor.
+      - ./DASHBOARD_VOTACION/demo:/app/demo
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  cluster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: votacion-cluster
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    environment:
+      # Numero de nodos esclavos. Hay una macro-region por esclavo (maximo 4).
+      NUM_ESCLAVOS: ${NUM_ESCLAVOS:-4}
+      # Porcentaje de poblacion simulada: 10 para probar, 100 para el dataset real.
+      ESCALA_DATOS: ${ESCALA_DATOS:-10}
+      VOTACION_DASHBOARD_URL: http://dashboard:5000
+      VOTACION_NUM_HILOS: ${VOTACION_NUM_HILOS:-4}
+      VOTACION_HILOS_ALGORITMO: ${VOTACION_HILOS_ALGORITMO:-2}
+      VOTACION_TAM_LOTE: ${VOTACION_TAM_LOTE:-60000}
+      VOTACION_VERBOSE: ${VOTACION_VERBOSE:-0}
+    volumes:
+      # Los CSV generados se conservan entre ejecuciones (tardan en generarse).
+      - ./DATA:/app/DATA
+    # Trabajo por lotes: cuando termina de procesar, termina. No se reinicia.
+    restart: "no"

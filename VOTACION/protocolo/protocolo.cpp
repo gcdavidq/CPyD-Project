@@ -13,7 +13,7 @@ void serializarLote(const LoteTrabajo& lote, std::vector<char>& buffer) {
         tamano_total += voto.region.size() + 1;
         tamano_total += voto.dni.size() + 1;
         tamano_total += voto.candidato.size() + 1;
-        tamano_total += sizeof(bool) * 2;
+        tamano_total += sizeof(bool) * 2 + sizeof(int);  // + tipo_anomalia
     }
 
     //Redimencionamos el tamaño del buffer y obtenemos un puntero al inicio del buffer
@@ -44,6 +44,10 @@ void serializarLote(const LoteTrabajo& lote, std::vector<char>& buffer) {
         ptr += sizeof(bool);
         memcpy(ptr, &voto.anomalia_detectada, sizeof(bool)); 
         ptr += sizeof(bool);
+        // El tipo de anomalia tambien viaja: antes se perdia al redistribuir
+        // un lote por balanceo y el nodo destino lo recibia sin clasificar.
+        memcpy(ptr, &voto.tipo_anomalia, sizeof(int));
+        ptr += sizeof(int);
     }
 }
 
@@ -74,6 +78,8 @@ LoteTrabajo deserializarLote(const std::vector<char>& buffer) {
         ptr += sizeof(bool);
         memcpy(&lote.votos[i].anomalia_detectada, ptr, sizeof(bool)); 
         ptr += sizeof(bool);
+        memcpy(&lote.votos[i].tipo_anomalia, ptr, sizeof(int));
+        ptr += sizeof(int);
     }
     return lote;
 }

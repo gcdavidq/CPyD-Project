@@ -1,0 +1,154 @@
+.nodo {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 16px 16px;
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+}
+
+/* El maestro no procesa votos: se distingue con un filo lateral, no con otro
+   color de fondo, para que no compita con los estados de carga. */
+.nodo-maestro {
+  border-left: 3px solid var(--acento);
+}
+
+.nodo-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nodo-nombre {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--texto);
+  min-width: 0;
+}
+
+.nodo-rank {
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--texto-3);
+}
+
+.nodo-carga-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.nodo-carga-etiqueta {
+  font-size: 11px;
+  color: var(--texto-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.nodo-carga-valor {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.nodo-pista {
+  position: relative;
+  height: 8px;
+  background: var(--superficie-alt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.nodo-relleno {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.nodo-relleno.bien  { background: var(--bien); }
+.nodo-relleno.aviso { background: var(--aviso); }
+.nodo-relleno.grave { background: var(--grave); }
+
+/* Los dos umbrales que usa el balanceador, marcados sobre la propia barra. */
+.nodo-umbral {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--superficie);
+  opacity: 0.85;
+}
+
+.nodo-datos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 8px;
+  margin: 0;
+}
+
+.nodo-datos div { min-width: 0; }
+
+.nodo-datos dt {
+  font-size: 10px;
+  color: var(--texto-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  /* Sin nowrap: con cuatro columnas estrechas, forzar una sola linea hacia
+     que las etiquetas se montasen unas sobre otras. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nodo-datos dd {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  white-space: nowrap;
+}
+
+.nodo-no {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--texto-3);
+}
+
+.nodo-reparto-etiqueta {
+  display: block;
+  font-size: 10.5px;
+  color: var(--texto-3);
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.nodo-reparto-pista {
+  display: block;
+  height: 5px;
+  background: var(--superficie-alt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.nodo-reparto-barra {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (max-width: 460px) {
+  .nodo-datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -157,69 +157,56 @@ void simularLlegadaVotos(const std::vector<Voto>& todos_votos,
                          std::function<void(std::vector<Voto>&&)> cb,
                          size_t tam_lote)
 {
-    std::random_device rd; 
+    std::random_device rd;
     std::mt19937 gen(rd());
-    //Distribución aleatoria unforme
+    // Los votos no llegan de golpe: entre lote y lote pasan entre 6 y 10
+    // segundos, imitando el goteo real de una jornada electoral.
     std::uniform_int_distribution<> dist(6000, 10000);
 
     for (size_t i = 0; i < todos_votos.size(); i += tam_lote) {
-        //Determinar cuantos votos procesar en este lote
+        // Determinar cuantos votos procesar en este lote
         std::size_t fin = std::min(i + tam_lote, todos_votos.size());
 
-        //Crear un lote con los votos del rango [i, fin)
+        // Crear un lote con los votos del rango [i, fin)
         std::vector<Voto> lote(todos_votos.begin() + i, todos_votos.begin() + fin);
 
-        int count_anom = 0;
-        for (const auto& v : lote) {
-            if (v.anomalo) count_anom++;
+        if (VERBOSE) {
+            int count_anom = 0;
+            for (const auto& v : lote) {
+                if (v.anomalo) count_anom++;
+            }
+            std::cout << "Nodo " << nodo_id << ": llegaron " << lote.size()
+                      << " votos (" << count_anom << " anomalos)\n";
         }
 
-        std::cout << "[DEBUG] Lote de " << lote.size() << " votos. Anómalos: " << count_anom << std::endl;
-
-        std::cout << "Nodo " << nodo_id << ": llegaron "
-                  << lote.size() << " votos\n";
-        
-
-       
-        cb(move(lote)); // Invocar el callback con el lote
+        cb(std::move(lote)); // Invocar el callback con el lote
 
         std::this_thread::sleep_for(std::chrono::milliseconds(dist(gen)));
     }
 }
+
 void simularLlegadaVotos(const std::string& ruta_csv,
                          int nodo_id,
-                         //pasamos por referencia el mismo vector, no una copia
-                         std::vector<Voto>& votos_recibidos,std::mutex& mtx_votos)
+                         // pasamos por referencia el mismo vector, no una copia
+                         std::vector<Voto>& votos_recibidos, std::mutex& mtx_votos)
 {
     std::vector<Voto> todos_votos = leerVotos(ruta_csv);
-    // NUEVO DEBUG
+
     int total_anom = 0;
     for (const auto& v : todos_votos) {
         if (v.anomalo) total_anom++;
     }
-    std::cout << "[DEBUG] Total votos leídos: " << todos_votos.size()
-            << " | Anómalos: " << total_anom << std::endl;
+    std::cout << "Nodo " << nodo_id << ": " << todos_votos.size()
+              << " votos cargados (" << total_anom << " anomalos reales)" << std::endl;
 
-
-
-
-    //funcion lambda que inserta los votos del lote a votos_recibidos
+    // Lambda que va acumulando cada lote en el buffer compartido del nodo.
     auto cb = [&](std::vector<Voto>&& lote) {
-        std::lock_guard<std::mutex> lock(mtx_votos); // <- proteger escritura
-        int count_anom = 0;
-        for (const auto& v : lote) {
-            if (v.anomalo) count_anom++;
-        }
-        std::cout << "[DEBUG] Insertando lote con " << count_anom << " votos anómalos\n";
-
+        std::lock_guard<std::mutex> lock(mtx_votos); // proteger la escritura
         votos_recibidos.insert(
-            
             votos_recibidos.end(),
-            make_move_iterator(lote.begin()),
-            make_move_iterator(lote.end()));
-
+            std::make_move_iterator(lote.begin()),
+            std::make_move_iterator(lote.end()));
     };
 
     simularLlegadaVotos(todos_votos, nodo_id, cb, TAM_LOTE_POR_DEFECTO);
 }
-

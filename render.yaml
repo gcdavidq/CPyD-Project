@@ -1,0 +1,46 @@
+# =============================================================================
+#  Despliegue del dashboard en Render (https://render.com)
+#
+#  Render lee este fichero como "Blueprint" y crea el servicio solo. Pasos:
+#    1. Sube el repositorio a GitHub.
+#    2. En Render: New > Blueprint > conecta el repo.
+#    3. Render detecta este render.yaml y despliega. No hay que tocar nada mas.
+#
+#  Se despliega SOLO el dashboard, en modo replay: reproduce una ejecucion real
+#  del cluster previamente grabada. El cluster MPI no puede vivir aqui (haria
+#  falta multiproceso con red entre nodos), y se ejecuta en local con Docker.
+# =============================================================================
+services:
+  - type: web
+    name: votacion-distribuida-dashboard
+    runtime: docker
+    plan: free
+    region: oregon
+
+    dockerfilePath: ./DASHBOARD_VOTACION/Dockerfile
+    dockerContext: ./DASHBOARD_VOTACION
+
+    healthCheckPath: /health
+
+    envVars:
+      # Reproduce la ejecucion grabada en lugar de esperar a un cluster.
+      - key: MODO_DASHBOARD
+        value: replay
+
+      - key: FICHERO_DEMO
+        value: demo/ejecucion_real.jsonl
+
+      # Velocidad de reproduccion. 1.0 respeta los tiempos reales; subirlo hace
+      # que el visitante vea movimiento antes.
+      - key: REPLAY_VELOCIDAD
+        value: "1.5"
+
+      - key: REPLAY_PAUSA_SEG
+        value: "5"
+
+      - key: FLASK_DEBUG
+        value: "0"
+
+      # Render genera un valor aleatorio y lo mantiene entre despliegues.
+      - key: SECRET_KEY
+        generateValue: true

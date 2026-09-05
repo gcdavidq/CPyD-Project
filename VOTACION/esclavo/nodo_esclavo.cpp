@@ -91,7 +91,7 @@ void ejecutarNodoEsclavo(int nodo_id, int nodo_maestro) {
 while (continuar_procesando) {
     // Espera artificial para permitir que se acumulen más votos
     
-    cout<<"votos del nodo: "<< nodo_id<<" que esperan ser procesados: "<< votos_recibidos.size()<<endl;
+    if (VERBOSE) cout<<"votos del nodo: "<< nodo_id<<" que esperan ser procesados: "<< votos_recibidos.size()<<endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(6000));
 
     
@@ -99,24 +99,10 @@ while (continuar_procesando) {
     vector<Voto> lote_votos;
     {
         lock_guard<mutex> lock(mtx_votos);
-        int total_anom = 0;
-        for (const auto& v : votos_recibidos) {
-            if (v.anomalo) total_anom++;
-        }
-        cout << "[DEBUG] Total acumulado en votos_recibidos: " << total_anom << " votos anómalos en el nodo: "<<nodo_id<<endl;
         
         
         if (!votos_recibidos.empty()) {
             
-            //PROBAR LA ANOMALIA DE LOS VOTOS
-            int total_anom1=0;
-
-            for (const auto& voto : votos_recibidos) {
-                if (voto.anomalo) { 
-                    total_anom1++;
-                }
-            }
-            cout << "[DEBUG] Total acumulado de votos anomalos recibidos"<<total_anom1 << "del nodo: "<<nodo_id<< endl; 
 
             // Tomar un máximo de 1000 votos para procesar
             int votos_a_tomar = min(TAM_LOTE_POR_DEFECTO, static_cast<int>(votos_recibidos.size()));
@@ -140,7 +126,7 @@ while (continuar_procesando) {
             // Notificar al maestro que está desocupado
             MPI_Send(nullptr, 0, MPI_CHAR, nodo_maestro, TAG_NODO_DESOCUPADO, MPI_COMM_WORLD);
             ya_notificado_desocupado = true;
-            cout << "[DEBUG] Nodo " << nodo_id << " notificó que está desocupado" << endl;
+            if (VERBOSE) cout << "[DEBUG] Nodo " << nodo_id << " notificó que está desocupado" << endl;
         }
         
         // Esperar un poco por si llega trabajo de balanceo de carga
@@ -173,7 +159,7 @@ while (continuar_procesando) {
                     break;
 
                 } else {
-                    cout << "[DEBUG] Nodo " << nodo_id << " procesando mensaje con tag " << tag << endl;
+                    if (VERBOSE) cout << "[DEBUG] Nodo " << nodo_id << " procesando mensaje con tag " << tag << endl;
                     break;
                 }
             }
@@ -186,15 +172,16 @@ while (continuar_procesando) {
         {
             lock_guard<mutex> lock(mtx_votos);
             if (!votos_recibidos.empty()) {
+                // Marcamos que hay trabajo y seguimos: antes habia aqui un `break`
+                // que rompia el bucle principal y descartaba estos votos.
                 trabajo_recibido = true;
-                cout << "[DEBUG] Nodo " << nodo_id << " encontró nuevos votos durante espera" << endl;
-                break;
+                if (VERBOSE) cout << "[DEBUG] Nodo " << nodo_id << " encontró nuevos votos durante espera" << endl;
             }
         }
         
         // Si no recibió trabajo después del tiempo de espera, asumir que puede terminar
         if (!trabajo_recibido && continuar_procesando) {
-            cout << "[DEBUG] Nodo " << nodo_id << " terminando por falta de trabajo" << endl;
+            if (VERBOSE) cout << "[DEBUG] Nodo " << nodo_id << " terminando por falta de trabajo" << endl;
             continuar_procesando = false;
             break;
         }
@@ -237,7 +224,7 @@ while (continuar_procesando) {
         MPI_Send(buffer_stats.data(), buffer_stats.size(), MPI_CHAR, nodo_maestro, TAG_REPORTE_STATS, MPI_COMM_WORLD);
         double fin_com = MPI_Wtime();
         double tiempo_envio= fin_com - inicio_com;
-        cout <<"TIEMPO DE DEMORA EN ENVIÓ: "<<tiempo_envio;
+        if (VERBOSE) cout <<"TIEMPO DE DEMORA EN ENVIÓ: "<<tiempo_envio;
         if (lotes_procesados == 0) {
             tiempo_promedio_comunicacion = tiempo_envio;
         } else {
@@ -245,7 +232,7 @@ while (continuar_procesando) {
             / lotes_procesados;
         }
 
-        cout<<"TIEMPO PROMEDIO DE ENVIO DE DATOS AL NODO MAESTRO: "<<tiempo_promedio_comunicacion<< "del nodo: "<<nodo_id<<endl;
+        if (VERBOSE) cout <<"TIEMPO PROMEDIO DE ENVIO DE DATOS AL NODO MAESTRO: "<<tiempo_promedio_comunicacion<< "del nodo: "<<nodo_id<<endl;
 
 
         
@@ -270,7 +257,7 @@ while (continuar_procesando) {
         chrono::duration<float> tiempo_total = ahora - tiempo_inicio;
         float carga = obtenerUsoCPU(tiempo_total.count());
         float hilos = omp_get_max_threads();
-        cout<<"NODO "<<nodo_id << "Uso real de CPU: " << carga << " %" << "con" << hilos<< "hilos" << endl;
+        if (VERBOSE) cout <<"NODO "<<nodo_id << "Uso real de CPU: " << carga << " %" << "con" << hilos<< "hilos" << endl;
         /*
 
         //Carga basada en votos pendientes y capacidad 
@@ -405,33 +392,39 @@ while (continuar_procesando) {
 
 // Asegurar que se envía la señal de finalización
 if (continuar_procesando == false) {
-    cout << "[DEBUG] Nodo " << nodo_id << " enviando señal de resultado final" << endl;
+    if (VERBOSE) cout << "[DEBUG] Nodo " << nodo_id << " enviando señal de resultado final" << endl;
     MPI_Send(nullptr, 0, MPI_CHAR, nodo_maestro, TAG_RESULTADO_FINAL, MPI_COMM_WORLD);
 }
 
 
-// Esperar a que termine el hilo de simulación con timeout
+// Esperar a que termine el hilo de simulación, con un tope de tiempo.
+//
+// OJO: joinable() NO indica si el hilo sigue trabajando, solo si todavia no se
+// ha hecho join() o detach() sobre el. La version anterior giraba sobre
+// joinable(), de modo que la condicion de salida nunca se cumplia y CADA nodo
+// se pasaba los 100 segundos completos dando vueltas antes de terminar.
+// El flag atomico simulacion_terminada si dice la verdad.
 if (hilo_simulacion.joinable()) {
-    cout << "[DEBUG] Nodo " << nodo_id << " esperando que termine hilo de simulación" << endl;
-    
-    // Intentar join con timeout implícito
-    auto tiempo_join_inicio = chrono::system_clock::now();
-    while (hilo_simulacion.joinable()) {
-        auto tiempo_transcurrido = chrono::duration_cast<chrono::seconds>(
-            chrono::system_clock::now() - tiempo_join_inicio).count();
-            
-        if (tiempo_transcurrido > 100) {
-            cout << "[WARNING] Nodo " << nodo_id << " forzando finalización del hilo de simulación" << endl;
-            // En C++, no podemos forzar detach/join, pero podemos intentar detach
-            hilo_simulacion.detach();
+    const int ESPERA_MAX_SEG = 100;
+    const auto inicio_espera = chrono::system_clock::now();
+
+    while (!simulacion_terminada.load()) {
+        const auto transcurrido = chrono::duration_cast<chrono::seconds>(
+            chrono::system_clock::now() - inicio_espera).count();
+
+        if (transcurrido > ESPERA_MAX_SEG) {
+            cout << "[AVISO] Nodo " << nodo_id
+                 << ": el hilo de simulación no terminó a tiempo, se abandona." << endl;
             break;
         }
-        
         this_thread::sleep_for(chrono::milliseconds(100));
     }
-    
-    if (hilo_simulacion.joinable()) {
+
+    if (simulacion_terminada.load()) {
         hilo_simulacion.join();
+    } else {
+        // No se puede matar un std::thread: lo unico legal es desligarlo.
+        hilo_simulacion.detach();
     }
 }
 //TIEMPO DE EJECUCIÓN POR NODO

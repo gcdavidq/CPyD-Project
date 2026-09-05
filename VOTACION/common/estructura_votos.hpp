@@ -15,7 +15,7 @@ struct Voto {
     std::string candidato;
     bool  anomalo{false};
     bool  anomalia_detectada{false};
-    int tipo_anomalia; //NUEVO
+    int   tipo_anomalia{-1};  ///< -1 ninguna, 1 DNI duplicado, 2 concentracion, 3 flujo
 };
 
 // Estructura para almacenar un lote de trabajo
